@@ -106,7 +106,7 @@ ActsExamples::CKFPerformanceWriter::Config ActsExamples::Options::readCKFPerfCon
   }
 
   if (vm.count("ckf-PtMin")) {
-    perfWriterCfg.ptMin = vm["ckf-PtMin"].as<float>() * Acts::UnitConstants::GeV;
+    perfWriterCfg.ptMin = vm["ckf-PtMin"].as<float>(); //* Acts::UnitConstants::GeV;
   }
 
   if (vm.count("ckf-PtMax")) {
@@ -133,19 +133,19 @@ Acts::SeedfinderConfig<ActsExamples::SimSpacePoint> ActsExamples::Options::readS
   // compare to variables here https://github.com/ehofgard/acts/blob/main/Core/include/Acts/Seeding/SeedfinderConfig.hpp
   // add more parameters here? 
   if (vm.count("sf-minPt")) {
-    cfg.minPt = vm["sf-minPt"].as<float>() * Acts::UnitConstants::MeV;
+    cfg.minPt = vm["sf-minPt"].as<float>()*Acts::UnitConstants::MeV;
   }
   if (vm.count("sf-cotThetaMax")) {
-    cfg.cotThetaMax = vm["sf-cotThetaMax"].as<float>() * Acts::UnitConstants::mm;;
+    cfg.cotThetaMax = vm["sf-cotThetaMax"].as<float>()*Acts::UnitConstants::mm;;
   }
   if (vm.count("sf-deltaRMin")) {
-    cfg.deltaRMin = vm["sf-deltaRMin"].as<float>() * Acts::UnitConstants::mm;;
+    cfg.deltaRMin = vm["sf-deltaRMin"].as<float>()*Acts::UnitConstants::mm;;
   }
   if (vm.count("sf-deltaRMax")) {
-    cfg.deltaRMax = vm["sf-deltaRMax"].as<float>() * Acts::UnitConstants::mm;
+    cfg.deltaRMax = vm["sf-deltaRMax"].as<float>()*Acts::UnitConstants::mm;
   }
   if (vm.count("sf-impactMax")) {
-    cfg.impactMax = vm["sf-impactMax"].as<float>() * Acts::UnitConstants::mm;
+    cfg.impactMax = vm["sf-impactMax"].as<float>()*Acts::UnitConstants::mm;
   }
   if (vm.count("sf-sigmaScattering")) {
     cfg.sigmaScattering = vm["sf-sigmaScattering"].as<float>();
@@ -154,25 +154,25 @@ Acts::SeedfinderConfig<ActsExamples::SimSpacePoint> ActsExamples::Options::readS
     cfg.maxSeedsPerSpM = vm["sf-maxSeedsPerSpM"].as<size_t>();
   }
   if (vm.count("sf-collisionRegionMin")) {
-    cfg.collisionRegionMin = vm["sf-collisionRegionMin"].as<float>() * Acts::UnitConstants::mm;
+    cfg.collisionRegionMin = vm["sf-collisionRegionMin"].as<float>()*Acts::UnitConstants::mm;
   }
   if (vm.count("sf-collisionRegionMax")) {
-    cfg.collisionRegionMax = vm["sf-collisionRegionMax"].as<float>() * Acts::UnitConstants::mm;
+    cfg.collisionRegionMax = vm["sf-collisionRegionMax"].as<float>()*Acts::UnitConstants::mm;
   }
   if (vm.count("sf-zMin")) {
-    cfg.zMin = vm["sf-zMin"].as<float>() * Acts::UnitConstants::mm;
+    cfg.zMin = vm["sf-zMin"].as<float>()*Acts::UnitConstants::mm;
   }
   if (vm.count("sf-zMax")) {
-    cfg.zMax = vm["sf-zMax"].as<float>() * Acts::UnitConstants::mm;
+    cfg.zMax = vm["sf-zMax"].as<float>()*Acts::UnitConstants::mm;
   }
   if (vm.count("sf-rMax")) {
-    cfg.rMax = vm["sf-rMax"].as<float>() * Acts::UnitConstants::mm;
+    cfg.rMax = vm["sf-rMax"].as<float>()*Acts::UnitConstants::mm;
   }
   if (vm.count("sf-rMin")) {
-    cfg.rMin = vm["sf-rMin"].as<float>() * Acts::UnitConstants::mm;
+    cfg.rMin = vm["sf-rMin"].as<float>()*Acts::UnitConstants::mm;
   }
   if (vm.count("sf-bFieldInZ")) {
-    cfg.bFieldInZ = vm["sf-bFieldInZ"].as<float>() * Acts::UnitConstants::T;
+    cfg.bFieldInZ = vm["sf-bFieldInZ"].as<float>()*Acts::UnitConstants::T;
   }
   /*
   if (vm.count("sf-beamPos")) {
@@ -190,7 +190,7 @@ Acts::SeedfinderConfig<ActsExamples::SimSpacePoint> ActsExamples::Options::readS
     cfg.radLengthPerSeed = vm["sf-radLengthPerSeed"].as<float>();
   }
   if (vm.count("sf-maxPtScattering")) {
-    cfg.maxPtScattering = vm["sf-maxPtScattering"].as<float>() * Acts::UnitConstants::MeV;
+    cfg.maxPtScattering = vm["sf-maxPtScattering"].as<float>()*Acts::UnitConstants::MeV;
   }
   return cfg;
 }

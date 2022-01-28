@@ -48,7 +48,7 @@ struct SeedfinderConfig {
   // how many sigmas of scattering angle should be considered?
   float sigmaScattering = 5;
   // Upper pt limit for scattering calculation
-  float maxPtScattering = 10000 * Acts::UnitConstants::MeV;
+  float maxPtScattering = 10000. * Acts::UnitConstants::MeV;
 
   // for how many seeds can one SpacePoint be the middle SpacePoint?
   unsigned int maxSeedsPerSpM = 5;
