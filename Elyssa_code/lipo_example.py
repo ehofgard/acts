@@ -12,10 +12,14 @@ import numpy as np
 import json
 import array
 
-def function(x, y, z):
+# Put parameters as arguments here
+def function(maxSeedsPerSpM):
+    saved_args = locals()
     zdict = {"a": 1, "b": 2}
+    # would call the function here/open a subprocess
     return -((x - 1.23) ** 6) + -((y - 0.3) ** 4) * zdict[z]
 
+# Initial guess here
 pre_eval_x = dict(x=2.3, y=13, z="b")
 evaluations = [(pre_eval_x, function(**pre_eval_x))]
 
@@ -28,6 +32,7 @@ search = GlobalOptimizer(
     maximize=True,
 )
 
+# This may pose an issue w/ evaluating so many times
 num_function_calls = 1000
 search.run(num_function_calls)
 
