@@ -13,27 +13,39 @@ import json
 import array
 
 # Put parameters as arguments here
-def function(maxSeedsPerSpM):
+# Need to keep the names of the arguments straight
+BIGK = 3
+
+def function(impactMax):
     saved_args = locals()
-    zdict = {"a": 1, "b": 2}
+    params = ["impactMax"]
+    arg = paramsToInput(params,saved_args)
+    r = executeAlg(arg)
+    if len(r) != 0:
+        dup, eff, fake = 100*float(r['dup']), 100*float(r['eff']), 100*float(r['fake'])
+    else:
+        dup, eff, fake = np.nan, np.nan, np.nan
+    # fake * dup / (BIGK)
+    penalty = dup/(BIGK)
+    #param_dist = dict(zip(params,saved_args))
+    # zdict = {"a": 1, "b": 2}A
     # would call the function here/open a subprocess
-    return -((x - 1.23) ** 6) + -((y - 0.3) ** 4) * zdict[z]
+    return eff - penalty
 
 # Initial guess here
-pre_eval_x = dict(x=2.3, y=13, z="b")
+pre_eval_x = dict(impactMax = 0.5)
 evaluations = [(pre_eval_x, function(**pre_eval_x))]
 
 search = GlobalOptimizer(
     function,
-    lower_bounds={"x": -10.0, "y": -10},
-    upper_bounds={"x": 10.0, "y": -3},
-    categories={"z": ["a", "b"]},
+    lower_bounds = {"impactMax": 0.1},
+    upper_bounds = {"impactMax": 20},
     evaluations=evaluations,
     maximize=True,
 )
 
 # This may pose an issue w/ evaluating so many times
-num_function_calls = 1000
+num_function_calls = 2
 search.run(num_function_calls)
 
 # Format the input for the seeding algorithm. 
@@ -45,8 +57,8 @@ def paramsToInput(params, names):
            '--ckf-selection-nmax', '10', 
            '--digi-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json', 
            '--geo-selection-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
-           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event',
-           '--loglevel', '5','--sf-bFieldInZ', '1.99724','--sf-collisionRegionMin','-250','--sf-collisionRegionMax','250','--sf-zMin','-2000','--sf-zMax','2000'] 
+           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/muon_data_10events',
+           '--loglevel', '5']
     if len(params) != len(names):
         raise Exception("Length of Params must equal names in paramsToInput")
     i = 0
@@ -57,3 +69,32 @@ def paramsToInput(params, names):
         ret.append(str(paramValue))
         i += 1
     return ret
+
+# Opens a subprocess that runs the seeding algorithm and retrieves output using grep
+# Returns efficiency, fake rate, and duplicate rate as percentages
+def executeAlg(arg):
+    p2 = subprocess.Popen(
+        arg, bufsize=4096, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    p1_out, p1_err = p2.communicate()
+    p1_out = p1_out.decode()
+    p1_out = p1_out.strip().encode()
+    p2 = subprocess.Popen(
+        ['grep', mlTag], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    output = p2.communicate(input=p1_out)[0].decode().strip()
+    tokenizedOutput = output.split(',')
+    ret = {}
+    if len(tokenizedOutput) != 1:
+        ret['eff'] = float(tokenizedOutput[2])
+        ret['fake'] = float(tokenizedOutput[4])
+        ret['dup'] = float(tokenizedOutput[6])
+    if len(tokenizedOutput) == 1:
+        print("Timeout error ")
+        print(arg)
+        print(p1_out)
+        print(p1_err)
+        return ret
+    if ret['eff'] == 0:
+        print("0 efficiency error: ")
+        print(arg)
+        print(p1_out)
+        print(p1_err)
