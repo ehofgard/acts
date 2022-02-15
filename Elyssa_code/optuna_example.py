@@ -138,10 +138,26 @@ def objective(trial):
 # Initial guess here
 # Trying initial guess as original CKF parameters
 #pre_eval_x = dict(maxPtScattering = 30000, impactMax = 1.1, deltaRMin = 0.25, sigmaScattering = 4.0, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.0023)
-
+optuna#.delete_study(study_name="example-study",storage="sqlite:///{}.db".format("example_study"))
 optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
-study_name = "example-study"  # Unique identifier of the study.
+study_name = "CKF-study"  # Unique identifier of the study.
 storage_name = "sqlite:///{}.db".format(study_name)
-study = optuna.create_study(study_name=study_name, storage=storage_name, load_if_exists = True)
+study = optuna.create_study(study_name=study_name, storage=storage_name, load_if_exists = True,direction='maximize')
+
+# Add initial parameters
+# Also enqueue previously found parameters
+study.enqueue_trial(
+    {
+        "maxPtScattering": 30000,
+        "impactMax": 1.1,
+        "deltaRMin": 0.25,
+        "sigmaScattering": 4.0,
+        "deltaRMax": 60.0,
+        "maxSeedsPerSpM": 1,
+        "radLengthPerSeed": 0.0023
+    }
+)
+
+# Try visualization for parameter space
 
 study.optimize(objective, n_trials=3)
