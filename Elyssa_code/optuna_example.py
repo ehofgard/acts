@@ -32,8 +32,11 @@ from optuna.visualization import plot_slice
 # Need to keep the names of the arguments straight
 BIGK = 3
 #print(console.log(Object.keys(GlobalOptimizer)))
+ 
+### NEED TO ADD SIGMA ERROR TO OPTIONS ###
 alg_stats = {"eff":[],"dup":[],"fake": [],"score": [], "maxPtScattering":[],"impactMax": [], "deltaRMin": [], "sigmaScattering": [], "deltaRMax": [], "maxSeedsPerSpM": [],
-"radLengthPerSeed": [], "cotThetaMax" : [], "collisionRegion": [], "sigmaError": []}
+"radLengthPerSeed": [], "cotThetaMax" : [], "collisionRegionMin": [], 'collisionRegionMax': [],'zMin': [], 'zMax': [],'rMin' : [],'rMax' : []}
+# "sigmaError": []
 effs = []
 dups = []
 fakes = []
@@ -57,9 +60,10 @@ def paramsToInput(params,names):
            '--ckf-selection-nmax', '10', 
            '--digi-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json', 
            '--geo-selection-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
-           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event','--loglevel', '5','--sf-rMax', '200',
-           '--sf-collisionRegionMin','-250','--sf-collisionRegionMax','250','--sf-zMin','-2000','--sf-zMax','2000',
-           '--sf-cotThetaMax','7.40627','--sf-minPt','500','--sf-bFieldInZ','1.99724']
+           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event','--loglevel', '5','--sf-minPt','500','--sf-bFieldInZ','1.99724']
+           #'--sf-rMax', '200',
+           #'--sf-collisionRegionMin','-250','--sf-collisionRegionMax','250','--sf-zMin','-2000','--sf-zMax','2000',
+           #'--sf-cotThetaMax','7.40627','--sf-minPt','500','--sf-bFieldInZ','1.99724']
     if len(params) != len(names):
         raise Exception("Length of Params must equal names in paramsToInput")
     i = 0
@@ -118,7 +122,23 @@ def objective(trial):
     params.append(maxSeedsPerSpM)
     radLengthPerSeed = trial.suggest_float("radLengthPerSeed",.001,0.1)
     params.append(radLengthPerSeed)
-    keys = ["maxPtScattering","impactMax","deltaRMin", "sigmaScattering", "deltaRMax", "maxSeedsPerSpM", "radLengthPerSeed"]
+    cotThetaMax = trial.suggest_float("cotThetaMax",5.0,15.0)
+    params.append(cotThetaMax)
+    #sigmaError = trial.suggest_float("sigmaError",2.0,10.0)
+    #params.append(sigmaError)
+    collisionReg = trial.suggest_float("collisionReg",100,350)
+    params.append(-1*collisionReg)
+    params.append(collisionReg)
+    z = trial.suggest_float("z",1500,3000)
+    params.append(-1*z)
+    params.append(z)
+    rMin = trial.suggest_float("rMin",20,50)
+    params.append(rMin)
+    rMax = trial.suggest_float("rMax",150,600)
+    params.append(rMax)
+    keys = ["maxPtScattering","impactMax","deltaRMin", "sigmaScattering", "deltaRMax", "maxSeedsPerSpM", "radLengthPerSeed","cotThetaMax","collisionRegionMin",
+    "collisionRegionMax","zMin","zMax","rMin","rMax"]
+    # "sigmaError",
     #params = ["impactMax"]
     for i in range(len(keys)):
         alg_stats[keys[i]].append(params[i])
@@ -147,9 +167,9 @@ def objective(trial):
 # Initial guess here
 # Trying initial guess as original CKF parameters
 #pre_eval_x = dict(maxPtScattering = 30000, impactMax = 1.1, deltaRMin = 0.25, sigmaScattering = 4.0, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.0023)
-optuna.delete_study(study_name="CKF-study-nostart_defaultconfig_k5",storage="sqlite:///{}.db".format("CKF-study-nostart_defaultconfig_k5"))
+optuna.delete_study(study_name="CKF-study-nostart_defaultconfig_K3_fake_moreparams",storage="sqlite:///{}.db".format("CKF-study-nostart_defaultconfig_K3_fake_moreparams"))
 optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
-study_name = "CKF-study-nostart_defaultconfig_k5"  # Unique identifier of the study.
+study_name = "CKF-study-nostart_defaultconfig_K3_fake_moreparams"  # Unique identifier of the study.
 storage_name = "sqlite:///{}.db".format(study_name)
 study = optuna.create_study(study_name=study_name, storage=storage_name, load_if_exists = True,direction='maximize')
 
@@ -174,23 +194,23 @@ study.enqueue_trial(
 
 study.optimize(objective, n_trials=200)
 fig_hist = plot_optimization_history(study)
-fig_hist.write_image("optuna_plots_nostart_defaultconfig_K5/opt_history.jpeg")
+fig_hist.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_history.jpeg")
 fig_contour = plot_contour(study, params=["maxPtScattering","impactMax",
 "deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
-fig_contour.write_image("optuna_plots_nostart_defaultconfig_K5/opt_contour.jpeg")
+fig_contour.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_contour.jpeg")
 fig_parallel = plot_parallel_coordinate(study,params=["maxPtScattering","impactMax",
 "deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
-fig_parallel.write_image("optuna_plots_nostart_defaultconfig_K5/opt_parallel.jpeg")
+fig_parallel.write_image("optuna_plots_nostart_K3_fake_moreparams/opt_parallel.jpeg")
 fig_slice = plot_slice(study,params=["maxPtScattering","impactMax",
 "deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
-fig_slice.write_image("optuna_plots_nostart_defaultconfig_K5/opt_slice.jpeg")
+fig_slice.write_image("optuna_plots_nostart_K3_fake_moreparams/opt_slice.jpeg")
 fig_importance = plot_param_importances(study)
-fig_importance.write_image("optuna_plots_nostart_defaultconfig_K5/opt_import.jpeg")
+fig_importance.write_image("optuna_plots_nostart_K3_fake_moreparams/opt_import.jpeg")
 ## Parameters that impact the trial duration
 fig_importance_duration = plot_param_importances(
     study, target=lambda t: t.duration.total_seconds(), target_name="duration"
 )
-fig_importance_duration.write_image("optuna_plots_nostart_defaultconfig_K5/opt_import_duraction.jpeg")
+fig_importance_duration.write_image("optuna_plots_nostart_K3_fake_moreparams/opt_import_duration.jpeg")
 
 
 
