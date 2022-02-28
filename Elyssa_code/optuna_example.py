@@ -20,13 +20,20 @@ import numpy as np
 import json
 import array
 import sys
+from optuna.visualization import plot_contour
+from optuna.visualization import plot_edf
+from optuna.visualization import plot_intermediate_values
+from optuna.visualization import plot_optimization_history
+from optuna.visualization import plot_parallel_coordinate
+from optuna.visualization import plot_param_importances
+from optuna.visualization import plot_slice
 
 # Put parameters as arguments here
 # Need to keep the names of the arguments straight
 BIGK = 3
 #print(console.log(Object.keys(GlobalOptimizer)))
 alg_stats = {"eff":[],"dup":[],"fake": [],"score": [], "maxPtScattering":[],"impactMax": [], "deltaRMin": [], "sigmaScattering": [], "deltaRMax": [], "maxSeedsPerSpM": [],
-"radLengthPerSeed": []}
+"radLengthPerSeed": [], "cotThetaMax" : [], "collisionRegion": [], "sigmaError": []}
 effs = []
 dups = []
 fakes = []
@@ -50,7 +57,9 @@ def paramsToInput(params,names):
            '--ckf-selection-nmax', '10', 
            '--digi-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json', 
            '--geo-selection-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
-           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event','--loglevel', '5']
+           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event','--loglevel', '5','--sf-rMax', '200',
+           '--sf-collisionRegionMin','-250','--sf-collisionRegionMax','250','--sf-zMin','-2000','--sf-zMax','2000',
+           '--sf-cotThetaMax','7.40627','--sf-minPt','500','--sf-bFieldInZ','1.99724']
     if len(params) != len(names):
         raise Exception("Length of Params must equal names in paramsToInput")
     i = 0
@@ -125,7 +134,7 @@ def objective(trial):
     else:
         dup, eff, fake = np.nan, np.nan, np.nan
     # fake * dup / (BIGK)
-    penalty = dup/(BIGK)
+    penalty = dup/(BIGK) - fake
     #param_dist = dict(zip(params,saved_args))
     # zdict = {"a": 1, "b": 2}A
     # would call the function here/open a subprocess
@@ -138,14 +147,15 @@ def objective(trial):
 # Initial guess here
 # Trying initial guess as original CKF parameters
 #pre_eval_x = dict(maxPtScattering = 30000, impactMax = 1.1, deltaRMin = 0.25, sigmaScattering = 4.0, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.0023)
-optuna#.delete_study(study_name="example-study",storage="sqlite:///{}.db".format("example_study"))
+optuna.delete_study(study_name="CKF-study-nostart_defaultconfig_k5",storage="sqlite:///{}.db".format("CKF-study-nostart_defaultconfig_k5"))
 optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
-study_name = "CKF-study"  # Unique identifier of the study.
+study_name = "CKF-study-nostart_defaultconfig_k5"  # Unique identifier of the study.
 storage_name = "sqlite:///{}.db".format(study_name)
 study = optuna.create_study(study_name=study_name, storage=storage_name, load_if_exists = True,direction='maximize')
 
 # Add initial parameters
 # Also enqueue previously found parameters
+'''
 study.enqueue_trial(
     {
         "maxPtScattering": 30000,
@@ -157,7 +167,30 @@ study.enqueue_trial(
         "radLengthPerSeed": 0.0023
     }
 )
+'''
+
 
 # Try visualization for parameter space
 
-study.optimize(objective, n_trials=3)
+study.optimize(objective, n_trials=200)
+fig_hist = plot_optimization_history(study)
+fig_hist.write_image("optuna_plots_nostart_defaultconfig_K5/opt_history.jpeg")
+fig_contour = plot_contour(study, params=["maxPtScattering","impactMax",
+"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
+fig_contour.write_image("optuna_plots_nostart_defaultconfig_K5/opt_contour.jpeg")
+fig_parallel = plot_parallel_coordinate(study,params=["maxPtScattering","impactMax",
+"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
+fig_parallel.write_image("optuna_plots_nostart_defaultconfig_K5/opt_parallel.jpeg")
+fig_slice = plot_slice(study,params=["maxPtScattering","impactMax",
+"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
+fig_slice.write_image("optuna_plots_nostart_defaultconfig_K5/opt_slice.jpeg")
+fig_importance = plot_param_importances(study)
+fig_importance.write_image("optuna_plots_nostart_defaultconfig_K5/opt_import.jpeg")
+## Parameters that impact the trial duration
+fig_importance_duration = plot_param_importances(
+    study, target=lambda t: t.duration.total_seconds(), target_name="duration"
+)
+fig_importance_duration.write_image("optuna_plots_nostart_defaultconfig_K5/opt_import_duraction.jpeg")
+
+
+

@@ -22,7 +22,7 @@ import sys
 # Need to keep the names of the arguments straight
 BIGK = 3
 #print(console.log(Object.keys(GlobalOptimizer)))
-alg_stats = {"eff":[],"dup":[],"fake": [],"maxPtScattering":[],"impactMax": [], "deltaRMin": [], "sigmaScattering": [], "deltaRMax": [], "maxSeedsPerSpM": [],
+alg_stats = {"eff":[],"dup":[],"fake": [],"score": [], "maxPtScattering":[],"impactMax": [], "deltaRMin": [], "sigmaScattering": [], "deltaRMax": [], "maxSeedsPerSpM": [],
 "radLengthPerSeed": []}
 effs = []
 dups = []
@@ -96,8 +96,9 @@ def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, 
     for key in saved_args:
         alg_stats[key].append(saved_args[key])
     arg = paramsToInput(saved_args)
+    #print(arg)
     r = executeAlg(arg)
-    #print(r)
+    print(r)
     if len(r) != 0:
         dup, eff, fake = 100*float(r['dup']), 100*float(r['eff']), 100*float(r['fake'])
         alg_stats["eff"].append(eff)
@@ -110,29 +111,34 @@ def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, 
     #param_dist = dict(zip(params,saved_args))
     # zdict = {"a": 1, "b": 2}A
     # would call the function here/open a subprocess
-    scores.append(eff-penalty)
+    print(eff-penalty)
+    print("Iteration Number: ")
+    print(len(alg_stats['eff']))
+    alg_stats["score"].append(eff-penalty)
     return eff - penalty
 
 # Initial guess here
-pre_eval_x = dict(maxPtScattering = 30000, impactMax = 1.1, deltaRMin = 0.25, sigmaScattering = 4.0, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.0023)
+# Trying initial guess as original CKF parameters
+#pre_eval_x = dict(maxPtScattering = 30000, impactMax = 1.1, deltaRMin = 0.25, sigmaScattering = 4.0, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.0023)
+pre_eval_x = dict(maxPtScattering = 10000, impactMax = 3, deltaRMin = 1, sigmaScattering = 50, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.1)
 evaluations = [(pre_eval_x, function(**pre_eval_x))]
 
 search = GlobalOptimizer(
     function,
     lower_bounds = {"maxPtScattering": 1200, "impactMax": 0.1, "deltaRMin": 0.25, "sigmaScattering": 0.2, "deltaRMax": 50.0, "maxSeedsPerSpM": 0, "radLengthPerSeed": 0.001},
-    upper_bounds = {"maxPtScattering": 1234567, "impactMax": 20.0, "deltaRMin": 30.0, "sigmaScattering": 50.0, "deltaRMax": 300.0, "maxSeedsPerSpM": 10, "radLengthPerSeed": 0.025},
+    upper_bounds = {"maxPtScattering": 1234567, "impactMax": 20.0, "deltaRMin": 30.0, "sigmaScattering": 50.0, "deltaRMax": 300.0, "maxSeedsPerSpM": 10, "radLengthPerSeed": 0.1},
     evaluations=evaluations,
     maximize=True,
 )
 
 # This may pose an issue w/ evaluating so many times
-num_function_calls = 1000
+num_function_calls = 100
 search.run(num_function_calls)
 #print(search.evaluations)
 optimal_val = search.optimum
 print(optimal_val)
-print(alg_stats)
-with open('all_results_lipo.json', 'w') as fp:
+#print(alg_stats)
+with open('all_results_lipo_300.json', 'w') as fp:
     json.dump(alg_stats,fp)
-with open('best_result.json', 'w') as fp:
+with open('best_result_300.json', 'w') as fp:
     json.dump(optimal_val,fp)

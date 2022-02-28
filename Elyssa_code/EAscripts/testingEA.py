@@ -16,6 +16,7 @@ import numpy as np
 import json
 import array
 import sys
+import pickle
 
 # Command line arguments
 # Implement this later
@@ -43,7 +44,7 @@ import sys
 mlTag = 'mlTag'
 effTag, dupTag, fakeTag = 'eff', 'dup', 'fake'
 # used to be 50
-NPOP = 10 # Population size
+NPOP = 50 # Population size
 # INT_MIN, INT_MAX = 0, 5
 # FLT_MIN, FLT_MAX = 0.2, 3.0
 # Define bounds on parameters during training
@@ -51,8 +52,14 @@ NPOP = 10 # Population size
 #MINS = [0.1, 0.1, 0.05, 0.1, 0.8, 1.0, 0.1]
 #MAXS = [999, 20, 8, 10, 2, 10, 10]
 # doing a broader search here maybe?
-MINS = [0.1, 0.1, 0.1, 0.1, 0.1, 1, 0.1]
-MAXS = [100,100,100,100,100,100,100]
+# MINS = [0.1, 0.1, 0.1, 0.1, 0.1, 1, 0.1]
+#MAXS = [100,100,100,100,100,100,100]
+# Change these to follow process in testingES.py because they are currently breaking
+# seeding algorithm
+# Define bounds on parameters during training from testingES.py
+#MINS = [1200, 0.1, 0.25, 0.2, 50, 0, 0.001] #, 0.001, 400, 5]
+#MAXS = [1234567, 20, 30, 10, 200, 4, 0.02] #, 0.003, 600, 10]
+
 # Dictionary of normalization coefficients
 # because update for each parameter is drawn from the same normal distribution
 # took out collision region
@@ -68,7 +75,7 @@ for i, key in enumerate(NAME_TO_FACTOR):
     NAME_TO_INDEX[key] = i
 TournamentSize = 3 # Parameter used for selection
 # used to be 200
-NGEN = 15 # Number of generations
+NGEN = 16 # Number of generations
 # SIGMA used to be 0.1
 CXPB, MUTPB, SIGMA, INDPB = 0.5, 0.3, 1, 0.2
 NAMES_DEF = []
@@ -77,8 +84,8 @@ for oneName in NAME_TO_FACTOR:
 # MIN_STRATEGY = 0.01
 # MAX_STRATEGY = .5
 # make these user arguments
-plotDirectory = "zEAttbar200gen" # Where to save the plots
-ttbarSampleInput = ['--input-dir', '/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_5events']
+plotDirectory = "EAmuongen_20events" # Where to save the plots
+ttbarSampleInput = ['--input-dir', '/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/muon_data_10events']
 ttbarSampleBool = True
 bad_params = []
 
@@ -115,13 +122,15 @@ def indPrint(ind):
 # Format the input for the seeding algorithm. 
 # Assumes program is in same directory as seeding algorithm
 # Adding the CKF parameters here
+# Note, should probably change the code here
 def paramsToInput(params, names):
     ret = ['/afs/cern.ch/work/e/ehofgard/acts/build/bin/ActsExampleCKFTracksGeneric',
            '--ckf-selection-chi2max', '15', '--bf-constant-tesla=0:0:2',
            '--ckf-selection-nmax', '10', 
            '--digi-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json', 
            '--geo-selection-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
-           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_5events']
+           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/muon_data_20events',
+           '--loglevel', '4']
     '''
     if (ttbarSampleBool):
         ret.append(ttbarSampleInput[0])
@@ -146,6 +155,7 @@ def executeAlg(arg):
     p1_out, p1_err = p2.communicate()
     p1_out = p1_out.decode()
     #print(p1_out)
+    #print(p1_err)
     p1_out = p1_out.strip().encode()
     p2 = subprocess.Popen(
         ['grep', mlTag], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -160,9 +170,17 @@ def executeAlg(arg):
         ret['eff'] = float(tokenizedOutput[2])
         ret['fake'] = float(tokenizedOutput[4])
         ret['dup'] = float(tokenizedOutput[6])
+    if ret['eff'] == 0:
+        print("O efficieny error: ")
+        print(arg)
+        print(p1_out)
+        print(p1_err)
     if len(tokenizedOutput) == 1:
         print("Bad input: ")
         print(arg)
+        print(p1_out)
+        print(p1_err)
+        #print(p1_out)
     # should do this better
     '''
     print(tokenizedOutput)
@@ -181,8 +199,9 @@ def executeAlg(arg):
     return ret
 
 # weights used to be (1.0,-1.0,-1.0)
-#creator.create("Fitness", base.Fitness, weights=(1.0, -1.0, -1.0))
-creator.create("Fitness", base.Fitness, weights=(2.0, -1.0, -5.0))
+# was playing around with this, need to use score function here
+creator.create("Fitness", base.Fitness, weights=(1.0, -1.0, -1.0))
+#creator.create("Fitness", base.Fitness, weights=(2.0, -1.0, -5.0))
 creator.create("Individual", array.array, typecode="d",
                fitness=creator.Fitness, strategy=None)
 # creator.create("Strategy", array.array, typecode="d")
@@ -211,6 +230,8 @@ toolbox.register("population_guess", initPopulation, list,
 # Evaluates an individual and calculates a score
 def evaluate(individual):
     names, params = createNamesAndParams(individual)
+    #print("params")
+    #print(dict(zip(names,params)))
     arg = paramsToInput(params, names)
     r = executeAlg(arg)
     if len(r) != 0:
@@ -224,8 +245,9 @@ def evaluate(individual):
         #dup, eff, fake = -100,-100,-100
         #dup, eff, fake = 100,0,100
         dup, eff, fake = np.nan, np.nan, np.nan
-    # MAX_SEEDS = 20000
-    # seedsScore = 10 * float(seeds) / MAX_SEEDS
+        # MAX_SEEDS = 20000
+        # seedsScore = 10 * float(seeds) / MAX_SEEDS
+        bad_params.append(dict(zip(names,params)))
     '''
     nSeeds, nTrueSeeds, nDup = float(seeds), float(trueSeeds), float(dup)
     fakeRate = 100 * (nSeeds - nTrueSeeds) / nSeeds
@@ -370,8 +392,8 @@ radLengthPerSeeds = []
 deltaRMins = []
 deltaRMaxs = []
 def main():
-    {'maxPt': 30000, 'impactMax': 1.1,
-                  'deltaRMin': .25, 'sigmaScattering': 4, 'deltaRMax': 60.0, 'maxSeedsPerSpM': 1,'radLengthPerSeed': 0.0023}
+    #{'maxPt': 30000, 'impactMax': 1.1,
+    #              'deltaRMin': .25, 'sigmaScattering': 4, 'deltaRMax': 60.0, 'maxSeedsPerSpM': 1,'radLengthPerSeed': 0.0023}
     # Objects that will compile the data for population graphs
     logbook = tools.Logbook()
     stats_eff = tools.Statistics(key=lambda ind: ind.fitness.values[0])
@@ -433,8 +455,8 @@ def main():
                 del mutant.fitness.values
         # Evaluate the individuals with an invalid fitness (the mutated individuals)
         # need to skip NaN values here
-        for ind in offspring:
-            print(ind.fitness.wvalues)
+        #for ind in offspring:
+        #    print(ind.fitness.wvalues)
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         print(f"Evaluating {len(invalid_ind)} individuals...")
         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
@@ -508,3 +530,5 @@ plotHOF("DuplicateRate", dupRateList, "sigmaScattering", sigmaScats)
 plotHOF("FakeRate", fakeRateList, "sigmaScattering", sigmaScats)
 plotHOF("DuplicateRate", dupRateList, "maxSeedsPerSpM", maxSeedsPerSpMs)
 plotHOF("FakeRate", fakeRateList, "maxSeedsPerSpM", maxSeedsPerSpMs)
+with open('bad_input_test','wb') as fp:
+    pickle.dump(bad_params,fp)

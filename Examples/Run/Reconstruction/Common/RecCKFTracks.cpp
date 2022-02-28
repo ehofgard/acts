@@ -192,8 +192,10 @@ int runRecCKFTracks(int argc, char* argv[],
       // sets the seedingCfg.seedFinderConfig equal to the read values
       //Acts::SeedfinderConfig<SimSpacePoint> seeding = Options::readSeedFindingConfig(vm);
       seedingCfg.seedFinderConfig = Options::readSeedFindingConfig(vm);
-      // Would need to rebuild to add any of this
-      //std::cout << seedingCfg.seedFinderConfig.rMax;
+      // Would need to rebuild to add any< of this
+      //std::cout << "maxPtScattering val" << std::endl;
+      //std::cout << seedingCfg.seedFinderConfig.maxPtScattering << std::endl;
+
       //std::cout
       //std::cout << seedingCfg.SeedFind
 
