@@ -93,6 +93,15 @@ def executeAlg(arg):
         ret['eff'] = float(tokenizedOutput[2])
         ret['fake'] = float(tokenizedOutput[4])
         ret['dup'] = float(tokenizedOutput[6])
+        return ret
+    else:
+        # Bad input parameters make the seeding algorithm break
+        # kind of a bad solution but not sure what else to do here
+        ret['eff'] = 0
+        ret['dup'] = 1
+        ret['fake'] = 1
+        return ret
+    '''
     if len(tokenizedOutput) == 1:
         print("Timeout error ")
         print(arg)
@@ -104,6 +113,7 @@ def executeAlg(arg):
         print(p1_out)
         print(p1_err)
     return ret
+    '''
     
 
 def objective(trial):
@@ -192,7 +202,7 @@ study.enqueue_trial(
 
 # Try visualization for parameter space
 
-study.optimize(objective, n_trials=200)
+study.optimize(objective, n_trials=300)
 fig_hist = plot_optimization_history(study)
 fig_hist.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_history.jpeg")
 fig_contour = plot_contour(study, params=["maxPtScattering","impactMax",
