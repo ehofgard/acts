@@ -84,6 +84,7 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addMLOutput(desc);
   addRecCKFOptions(desc);
   Options::addDigitizationOptions(desc);
+  Options::addParticleSmearingOptions(desc);
   Options::addSpacePointMakerOptions(desc);
   Options::addCsvWriterOptions(desc);
 
