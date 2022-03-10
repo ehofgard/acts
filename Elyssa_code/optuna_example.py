@@ -177,7 +177,7 @@ def objective(trial):
 # Initial guess here
 # Trying initial guess as original CKF parameters
 #pre_eval_x = dict(maxPtScattering = 30000, impactMax = 1.1, deltaRMin = 0.25, sigmaScattering = 4.0, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.0023)
-optuna.delete_study(study_name="CKF-study-nostart_defaultconfig_K3_fake_moreparams",storage="sqlite:///{}.db".format("CKF-study-nostart_defaultconfig_K3_fake_moreparams"))
+#optuna.delete_study(study_name="CKF-study-nostart_defaultconfig_K3_fake_moreparams",storage="sqlite:///{}.db".format("CKF-study-nostart_defaultconfig_K3_fake_moreparams"))
 optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
 study_name = "CKF-study-nostart_defaultconfig_K3_fake_moreparams"  # Unique identifier of the study.
 storage_name = "sqlite:///{}.db".format(study_name)
@@ -202,25 +202,34 @@ study.enqueue_trial(
 
 # Try visualization for parameter space
 
-study.optimize(objective, n_trials=300)
+#study.optimize(objective, n_trials=1)
+print("Best trial until now:")
+print(" Value: ", study.best_trial.value)
+print(" Params: ")
+for key, value in study.best_trial.params.items():
+    print(f"    {key}: {value}")
 fig_hist = plot_optimization_history(study)
 fig_hist.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_history.jpeg")
-fig_contour = plot_contour(study, params=["maxPtScattering","impactMax",
-"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
-fig_contour.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_contour.jpeg")
+#fig_contour = plot_contour(study, params=["maxPtScattering","impactMax",
+#"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
+#fig_contour.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_contour.jpeg")
 fig_parallel = plot_parallel_coordinate(study,params=["maxPtScattering","impactMax",
-"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
-fig_parallel.write_image("optuna_plots_nostart_K3_fake_moreparams/opt_parallel.jpeg")
-fig_slice = plot_slice(study,params=["maxPtScattering","impactMax",
-"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
-fig_slice.write_image("optuna_plots_nostart_K3_fake_moreparams/opt_slice.jpeg")
+"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed","cotThetaMax",
+"collisionReg","z","rMin","rMax"])
+fig_parallel.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_parallel.jpeg")
+fig_slice1 = plot_slice(study,params=["maxPtScattering","impactMax",
+"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM"])
+fig_slice1.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_slice1.jpeg")
+fig_slice2 = plot_slice(study, params = ["radLengthPerSeed","cotThetaMax",
+"collisionReg","z","rMin","rMax"])
+fig_slice2.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_slice2.jpeg")
 fig_importance = plot_param_importances(study)
-fig_importance.write_image("optuna_plots_nostart_K3_fake_moreparams/opt_import.jpeg")
+fig_importance.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_import.jpeg")
 ## Parameters that impact the trial duration
 fig_importance_duration = plot_param_importances(
     study, target=lambda t: t.duration.total_seconds(), target_name="duration"
 )
-fig_importance_duration.write_image("optuna_plots_nostart_K3_fake_moreparams/opt_import_duration.jpeg")
+fig_importance_duration.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_import_duration.jpeg")
 
 
 
