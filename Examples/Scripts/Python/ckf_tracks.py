@@ -7,6 +7,7 @@ from acts.examples import Sequencer, GenericDetector, RootParticleReader
 import acts
 
 from acts import UnitConstants as u
+import argparse
 
 
 def runCKFTracks(
@@ -178,12 +179,12 @@ def runCKFTracks(
                 rMax=200 * u.mm,
                 zMax=2000 * u.mm,
                 zMin=-2000 * u.mm,
-                deltaRMax=60 * u.mm,
+                deltaRMax=78.16 * u.mm,
                 cotThetaMax=7.40627,  # 2.7 eta
             )
 
             seedFilterConfig = acts.SeedFilterConfig(
-                maxSeedsPerSpM=1, deltaRMin=1 * u.mm
+                maxSeedsPerSpM=0, deltaRMin=28.63 * u.mm
             )
 
             seedFinderConfig = acts.SeedfinderConfig(
@@ -200,12 +201,13 @@ def runCKFTracks(
                 zMax=gridConfig.zMax,
                 maxSeedsPerSpM=seedFilterConfig.maxSeedsPerSpM,
                 cotThetaMax=gridConfig.cotThetaMax,
-                sigmaScattering=50,
-                radLengthPerSeed=0.1,
+                sigmaScattering=2.24,
+                radLengthPerSeed=0.0988,
                 minPt=gridConfig.minPt,
                 bFieldInZ=gridConfig.bFieldInZ,
                 beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
-                impactMax=3 * u.mm,
+                impactMax=7.01 * u.mm,
+                maxPtScattering = 710793.03*u.MeV
             )
             seeding = acts.examples.SeedingAlgorithm(
                 level=acts.logging.INFO,
@@ -334,13 +336,175 @@ def runCKFTracks(
 
 
 if "__main__" == __name__:
+    # Insert argument parser dudes
+    p = argparse.ArgumentParser(
+        description = "Example script to run the generic detector with parameter changes",
+    )
+    p.add_argument(
+        "--sf-minPt",
+        default = 500.0,
+        type = float,
+        description = "Seed finder minimum pT in MeV."
+    )
+
+    p.add_argument(
+        "--sf-cotThetaMax",
+        default = 7.40627,
+        type = float,
+        description = "cot of maximum theta angle"
+    )
+
+    p.add_argument(
+        "--sf-deltaRMin",
+        default = 1.0,
+        type = float,
+        description = "Minimum distance in mm between two SPs in a seed"
+    )
+
+    p.add_argument(
+        "--sf-deltaRMax",
+        default = 60.0,
+        type = float,
+        description = "Maximum distance in mm between two SPs in a seed"
+    )
+
+    p.add_argument(
+        "--sf-impactMax",
+        default = 3.0,
+        type = float,
+        description = "max impact parameter in mm"
+    )
+
+    p.add_argument(
+        "--sf-sigmaScattering",
+        default = 50.0,
+        type = float,
+        description = "How many sigmas of scattering to include in seeds"
+    )
+
+    p.add_argument(
+        "--sf-maxSeedsPerSpM",
+        default = 1,
+        type = int,
+        description = "How many seeds can share one middle SpacePoint"
+    )
+
+    p.add_argument(
+        "--sf-collisionRegionMin",
+        default = -250.0,
+        type = float,
+        description = "limiting location of collision region in z in mm"
+    )
+
+    p.add_argument(
+        "--sf-collisionRegionMax",
+        default = 250.0,
+        type = float,
+        description = "limiting location of collision region in z in mm"
+    )
+
+    p.add_argument(
+        "--sf-zMin",
+        default = -2000.0,
+        type = float,
+        description = "Minimum z of space points included in algorithm"
+    )
+
+    p.add_argument(
+        "--sf-zMax",
+        default = 2000.0,
+        type = float,
+        description = "Maximum z of space points included in algorithm"
+    )
+
+    p.add_argument(
+        "--sf-rMax",
+        default = 200.0,
+        type = float,
+        description = "Max radius of Space Points included in algorithm in mm"
+    )
+
+    p.add_argument(
+        "--sf-rMin",
+        default = 33.0,
+        type = float,
+        description = "Min radius of Space Points included in algorithm in mm"
+    )
+    # Not adding bFieldInZ or beamPos
+    p.add_argument(
+        "--sf-maxPtScattering",
+        default = 10000.0,
+        type = float,
+        description = "maximum Pt for scattering cut"
+    )
+
+    p.add_argument(
+        "--sf-radLengthPerSeed",
+        default = 0.1,
+        type = float,
+        description = "Average radiation length"
+    )
+
+    p.add_argument(
+        "--output-dir",
+        default=Path.cwd(),
+        type=Path,
+        help="Directory to write outputs to"
+    )
+
+    # Make output directory
+    outdir = args.output_dir
+    args.output_dir.mkdir(exist_ok=True, parents=True)
+
+    # Get input particles
+    p.add_argument(
+        "--input_dir",
+        default = "input_particles",
+        type = Path,
+        help = "Input directory"
+    )
+
+    # Get other optimization arguments
+    p.add_argument(
+        "--sf-sigmaError",
+        default = 5.0,
+        type = float,
+        description = "Sigma error with seed finding"
+    )
+
+    p.add_argument(
+        "--ckf-selection-chi2max",
+        default = [15.0],
+        type = float,
+        nargs = "+"
+        description = "Maximum chi2 for CKF measurement selection"
+    )
+
+    p.add_argument(
+        "--ckf-selection-nmax",
+        default = [10.0],
+        type = float,
+        nargs = "+"
+        description = "Maximum number of measurement candidates on a surface for CKF measurement selection"
+    )
+
+    p.add_argument(
+        "--ckf-selection-abseta-bins",
+        default = [],
+        type = float,
+        nargs = "+",
+        description = "bins in |eta| to specify variable selections"
+    )
+
+    ## TO DO: put new parameters in algorithms above and test
+    
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     detector, trackingGeometry, decorators = GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    inputParticlePath = Path("particles.root")
+    inputParticlePath = args.input_dir
     if not inputParticlePath.exists():
         inputParticlePath = None
 
@@ -356,5 +520,5 @@ if "__main__" == __name__:
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
         inputParticlePath=inputParticlePath,
-        outputDir=Path.cwd(),
+        outputDir=outdir,
     ).run()
