@@ -175,16 +175,16 @@ def runCKFTracks(
             # Use seeding
             gridConfig = acts.SpacePointGridConfig(
                 bFieldInZ=1.99724 * u.T,
-                minPt=500 * u.MeV,
-                rMax=200 * u.mm,
-                zMax=2000 * u.mm,
-                zMin=-2000 * u.mm,
-                deltaRMax=78.16 * u.mm,
-                cotThetaMax=7.40627,  # 2.7 eta
+                minPt=args.sf_minPt * u.MeV,
+                rMax=args.sf_rMax * u.mm,
+                zMax=args.sf_zMax * u.mm,
+                zMin=args.sf_zMin * u.mm,
+                deltaRMax=args.sf_deltaRMax * u.mm,
+                cotThetaMax=args.sf_cotThetaMax  # 2.7 eta
             )
 
             seedFilterConfig = acts.SeedFilterConfig(
-                maxSeedsPerSpM=0, deltaRMin=28.63 * u.mm
+                maxSeedsPerSpM=args.sf_maxSeedsPerSpM, deltaRMin=args.sf_deltaRMin * u.mm
             )
 
             seedFinderConfig = acts.SeedfinderConfig(
@@ -195,19 +195,20 @@ def runCKFTracks(
                 deltaRMinBottomSP=seedFilterConfig.deltaRMin,
                 deltaRMaxTopSP=gridConfig.deltaRMax,
                 deltaRMaxBottomSP=gridConfig.deltaRMax,
-                collisionRegionMin=-250 * u.mm,
-                collisionRegionMax=250 * u.mm,
+                collisionRegionMin=args.sf_collisionRegionMin * u.mm,
+                collisionRegionMax=args.sf_collisionRegionMax * u.mm,
                 zMin=gridConfig.zMin,
                 zMax=gridConfig.zMax,
                 maxSeedsPerSpM=seedFilterConfig.maxSeedsPerSpM,
                 cotThetaMax=gridConfig.cotThetaMax,
-                sigmaScattering=2.24,
-                radLengthPerSeed=0.0988,
+                sigmaScattering=args.sf_sigmaScattering,
+                radLengthPerSeed=args.sf_radLengthPerSeed,
                 minPt=gridConfig.minPt,
                 bFieldInZ=gridConfig.bFieldInZ,
                 beamPos=acts.Vector2(0 * u.mm, 0 * u.mm),
-                impactMax=7.01 * u.mm,
-                maxPtScattering = 710793.03*u.MeV
+                impactMax=args.sf_impactMax * u.mm,
+                maxPtScattering = args.sf_maxPtScattering*u.MeV,
+                sigmaError = args.sf_sigmaError,
             )
             seeding = acts.examples.SeedingAlgorithm(
                 level=acts.logging.INFO,
@@ -263,7 +264,8 @@ def runCKFTracks(
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=acts.logging.INFO,
         measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
+            [(acts.GeometryIdentifier(), (args.ckf_selection_abseta_bins, args.ckf_selection_chi2max, 
+            args.ckf_selection_nmax))]
         ),
         inputMeasurements=digiAlg.config.outputMeasurements,
         inputSourceLinks=digiAlg.config.outputSourceLinks,
@@ -341,112 +343,112 @@ if "__main__" == __name__:
         description = "Example script to run the generic detector with parameter changes",
     )
     p.add_argument(
-        "--sf-minPt",
+        "--sf_minPt",
         default = 500.0,
         type = float,
         description = "Seed finder minimum pT in MeV."
     )
 
     p.add_argument(
-        "--sf-cotThetaMax",
+        "--sf_cotThetaMax",
         default = 7.40627,
         type = float,
         description = "cot of maximum theta angle"
     )
 
     p.add_argument(
-        "--sf-deltaRMin",
+        "--sf_deltaRMin",
         default = 1.0,
         type = float,
         description = "Minimum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
-        "--sf-deltaRMax",
+        "--sf_deltaRMax",
         default = 60.0,
         type = float,
         description = "Maximum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
-        "--sf-impactMax",
+        "--sf_impactMax",
         default = 3.0,
         type = float,
         description = "max impact parameter in mm"
     )
 
     p.add_argument(
-        "--sf-sigmaScattering",
+        "--sf_sigmaScattering",
         default = 50.0,
         type = float,
         description = "How many sigmas of scattering to include in seeds"
     )
 
     p.add_argument(
-        "--sf-maxSeedsPerSpM",
+        "--sf_maxSeedsPerSpM",
         default = 1,
         type = int,
         description = "How many seeds can share one middle SpacePoint"
     )
 
     p.add_argument(
-        "--sf-collisionRegionMin",
+        "--sf_collisionRegionMin",
         default = -250.0,
         type = float,
         description = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
-        "--sf-collisionRegionMax",
+        "--sf_collisionRegionMax",
         default = 250.0,
         type = float,
         description = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
-        "--sf-zMin",
+        "--sf_zMin",
         default = -2000.0,
         type = float,
         description = "Minimum z of space points included in algorithm"
     )
 
     p.add_argument(
-        "--sf-zMax",
+        "--sf_zMax",
         default = 2000.0,
         type = float,
         description = "Maximum z of space points included in algorithm"
     )
 
     p.add_argument(
-        "--sf-rMax",
+        "--sf_rMax",
         default = 200.0,
         type = float,
         description = "Max radius of Space Points included in algorithm in mm"
     )
 
     p.add_argument(
-        "--sf-rMin",
+        "--sf_rMin",
         default = 33.0,
         type = float,
         description = "Min radius of Space Points included in algorithm in mm"
     )
     # Not adding bFieldInZ or beamPos
     p.add_argument(
-        "--sf-maxPtScattering",
+        "--sf_maxPtScattering",
         default = 10000.0,
         type = float,
         description = "maximum Pt for scattering cut"
     )
 
     p.add_argument(
-        "--sf-radLengthPerSeed",
+        "--sf_radLengthPerSeed",
         default = 0.1,
         type = float,
         description = "Average radiation length"
     )
 
     p.add_argument(
-        "--output-dir",
+        "--output_dir",
         default=Path.cwd(),
         type=Path,
         help="Directory to write outputs to"
@@ -466,14 +468,14 @@ if "__main__" == __name__:
 
     # Get other optimization arguments
     p.add_argument(
-        "--sf-sigmaError",
+        "--sf_sigmaError",
         default = 5.0,
         type = float,
         description = "Sigma error with seed finding"
     )
 
     p.add_argument(
-        "--ckf-selection-chi2max",
+        "--ckf_selection_chi2max",
         default = [15.0],
         type = float,
         nargs = "+"
@@ -481,7 +483,7 @@ if "__main__" == __name__:
     )
 
     p.add_argument(
-        "--ckf-selection-nmax",
+        "--ckf_selection_nmax",
         default = [10.0],
         type = float,
         nargs = "+"
@@ -489,13 +491,16 @@ if "__main__" == __name__:
     )
 
     p.add_argument(
-        "--ckf-selection-abseta-bins",
+        "--ckf_selection_abseta_bins",
         default = [],
         type = float,
         nargs = "+",
         description = "bins in |eta| to specify variable selections"
     )
 
+    ## Make sure that selection lists are the same length
+    assert len(args.ckf_selection_abseta_bins) == len(args.ckf_selection_nmax) == len(args.ckf_selection_abseta_bins), "Selection parameters must be the same length"
+    
     ## TO DO: put new parameters in algorithms above and test
     
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
