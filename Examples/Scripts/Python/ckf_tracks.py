@@ -318,6 +318,7 @@ def runCKFTracks(
         # The bottom seed could be the first, second or third hits on the truth track
         nMeasurementsMin=selAlg.config.nHitsMin - 3,
         ptMin=0.4 * u.GeV,
+        outputIsML = args.outputIsML,
         filePath=str(outputDir / "performance_ckf.root"),
     )
     s.addWriter(ckfPerfWriter)
@@ -498,9 +499,16 @@ if "__main__" == __name__:
         description = "bins in |eta| to specify variable selections"
     )
 
+    p.add_argument(
+        "--outputIsML",
+        default = False,
+        type = bool,
+        description = "Prints formatted output for Optuna/optimization algs if true"
+    )
+
     ## Make sure that selection lists are the same length
     assert len(args.ckf_selection_abseta_bins) == len(args.ckf_selection_nmax) == len(args.ckf_selection_abseta_bins), "Selection parameters must be the same length"
-    
+
     ## TO DO: put new parameters in algorithms above and test
     
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
