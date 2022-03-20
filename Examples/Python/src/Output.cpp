@@ -577,6 +577,7 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(nMeasurementsMin);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(duplicatedPredictor);
+    ACTS_PYTHON_MEMBER(outputIsML);
     ACTS_PYTHON_STRUCT_END();
   }
 

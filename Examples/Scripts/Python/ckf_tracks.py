@@ -23,6 +23,7 @@ def runCKFTracks(
     inputParticlePath: Optional[Path] = None,
     s=None,
 ):
+
     s = s or Sequencer(events=100, numThreads=-1)
 
     logger = acts.logging.getLogger("CKFExample")
@@ -310,8 +311,7 @@ def runCKFTracks(
     s.addWriter(trackSummaryWriter)
 
     # Write CKF performance data
-    ckfPerfWriter = acts.examples.CKFPerformanceWriter(
-        level=acts.logging.INFO,
+    ckfPerfWriterConfig = acts.examples.CKFPerformanceWriter.Config(
         inputParticles=inputParticles,
         inputTrajectories=trackFinder.config.outputTrajectories,
         inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
@@ -320,7 +320,16 @@ def runCKFTracks(
         ptMin=0.4 * u.GeV,
         outputIsML = args.outputIsML,
         filePath=str(outputDir / "performance_ckf.root"),
+    ) 
+    print(ckfPerfWriterConfig)
+    ckfPerfWriterConfig.outputIsML = args.outputIsML
+    ckfPerfWriter = acts.examples.CKFPerformanceWriter(
+        ckfPerfWriterConfig,
+        acts.logging.INFO
     )
+    #print(ckfPerfWriter.level)
+    #print(ckfPerfWriter.outputIsML)
+    #ckfPerfWriter.outputIsML = args.outputIsML
     s.addWriter(ckfPerfWriter)
 
     if outputCsv:
@@ -347,105 +356,105 @@ if "__main__" == __name__:
         "--sf_minPt",
         default = 500.0,
         type = float,
-        description = "Seed finder minimum pT in MeV."
+        help = "Seed finder minimum pT in MeV."
     )
 
     p.add_argument(
         "--sf_cotThetaMax",
         default = 7.40627,
         type = float,
-        description = "cot of maximum theta angle"
+        help = "cot of maximum theta angle"
     )
 
     p.add_argument(
         "--sf_deltaRMin",
         default = 1.0,
         type = float,
-        description = "Minimum distance in mm between two SPs in a seed"
+        help = "Minimum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
         "--sf_deltaRMax",
         default = 60.0,
         type = float,
-        description = "Maximum distance in mm between two SPs in a seed"
+        help = "Maximum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
         "--sf_impactMax",
         default = 3.0,
         type = float,
-        description = "max impact parameter in mm"
+        help = "max impact parameter in mm"
     )
 
     p.add_argument(
         "--sf_sigmaScattering",
         default = 50.0,
         type = float,
-        description = "How many sigmas of scattering to include in seeds"
+        help = "How many sigmas of scattering to include in seeds"
     )
 
     p.add_argument(
         "--sf_maxSeedsPerSpM",
         default = 1,
         type = int,
-        description = "How many seeds can share one middle SpacePoint"
+        help = "How many seeds can share one middle SpacePoint"
     )
 
     p.add_argument(
         "--sf_collisionRegionMin",
         default = -250.0,
         type = float,
-        description = "limiting location of collision region in z in mm"
+        help = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
         "--sf_collisionRegionMax",
         default = 250.0,
         type = float,
-        description = "limiting location of collision region in z in mm"
+        help = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
         "--sf_zMin",
         default = -2000.0,
         type = float,
-        description = "Minimum z of space points included in algorithm"
+        help = "Minimum z of space points included in algorithm"
     )
 
     p.add_argument(
         "--sf_zMax",
         default = 2000.0,
         type = float,
-        description = "Maximum z of space points included in algorithm"
+        help = "Maximum z of space points included in algorithm"
     )
 
     p.add_argument(
         "--sf_rMax",
         default = 200.0,
         type = float,
-        description = "Max radius of Space Points included in algorithm in mm"
+        help = "Max radius of Space Points included in algorithm in mm"
     )
 
     p.add_argument(
         "--sf_rMin",
         default = 33.0,
         type = float,
-        description = "Min radius of Space Points included in algorithm in mm"
+        help = "Min radius of Space Points included in algorithm in mm"
     )
     # Not adding bFieldInZ or beamPos
     p.add_argument(
         "--sf_maxPtScattering",
         default = 10000.0,
         type = float,
-        description = "maximum Pt for scattering cut"
+        help = "maximum Pt for scattering cut"
     )
 
     p.add_argument(
         "--sf_radLengthPerSeed",
         default = 0.1,
         type = float,
-        description = "Average radiation length"
+        help = "Average radiation length"
     )
 
     p.add_argument(
@@ -455,9 +464,6 @@ if "__main__" == __name__:
         help="Directory to write outputs to"
     )
 
-    # Make output directory
-    outdir = args.output_dir
-    args.output_dir.mkdir(exist_ok=True, parents=True)
 
     # Get input particles
     p.add_argument(
@@ -472,23 +478,23 @@ if "__main__" == __name__:
         "--sf_sigmaError",
         default = 5.0,
         type = float,
-        description = "Sigma error with seed finding"
+        help = "Sigma error with seed finding"
     )
 
     p.add_argument(
         "--ckf_selection_chi2max",
         default = [15.0],
         type = float,
-        nargs = "+"
-        description = "Maximum chi2 for CKF measurement selection"
+        nargs = "+",
+        help = "Maximum chi2 for CKF measurement selection"
     )
 
     p.add_argument(
         "--ckf_selection_nmax",
-        default = [10.0],
-        type = float,
-        nargs = "+"
-        description = "Maximum number of measurement candidates on a surface for CKF measurement selection"
+        default = [10],
+        type = int,
+        nargs = "+",
+        help = "Maximum number of measurement candidates on a surface for CKF measurement selection"
     )
 
     p.add_argument(
@@ -496,18 +502,23 @@ if "__main__" == __name__:
         default = [],
         type = float,
         nargs = "+",
-        description = "bins in |eta| to specify variable selections"
+        help = "bins in |eta| to specify variable selections"
     )
 
     p.add_argument(
         "--outputIsML",
         default = False,
         type = bool,
-        description = "Prints formatted output for Optuna/optimization algs if true"
+        help = "Prints formatted output for Optuna/optimization algs if true"
     )
 
+    # Make output directory
+    args = p.parse_args()
+    outdir = args.output_dir
+    args.output_dir.mkdir(exist_ok=True, parents=True)
+
     ## Make sure that selection lists are the same length
-    assert len(args.ckf_selection_abseta_bins) == len(args.ckf_selection_nmax) == len(args.ckf_selection_abseta_bins), "Selection parameters must be the same length"
+    #assert len(args.ckf_selection_abseta_bins) == len(args.ckf_selection_nmax) == len(args.ckf_selection_abseta_bins), "Selection parameters must be the same length"
 
     ## TO DO: put new parameters in algorithms above and test
     
