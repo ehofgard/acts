@@ -507,9 +507,23 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--outputIsML",
-        default = False,
+        default = True,
         type = bool,
         help = "Prints formatted output for Optuna/optimization algs if true"
+    )
+
+    p.add_argument(
+        "--digi_config_file",
+        default = "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        type = Path,
+        help = "Digi config file" 
+    )
+
+    p.add_argument(
+        "--geo_selection_config_file",
+        default = "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        type = Path,
+        help = "Geo config file"
     )
 
     # Make output directory
@@ -537,9 +551,9 @@ if "__main__" == __name__:
         decorators,
         field=field,
         geometrySelection=srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        / args.geo_selection_config_file,
         digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        / args.digi_config_file,
         outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,

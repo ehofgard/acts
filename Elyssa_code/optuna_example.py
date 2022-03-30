@@ -55,12 +55,15 @@ def paramsToInput(params,names):
     # just adding bFieldInZ as parameter here, doesn't really make sense to adjust
     #params = list(saved_args.values())
     #names = list(saved_args.keys())
-    ret = ['/afs/cern.ch/work/e/ehofgard/acts/build/bin/ActsExampleCKFTracksGeneric',
-           '--ckf-selection-chi2max', '15', '--bf-constant-tesla=0:0:2',
-           '--ckf-selection-nmax', '10', 
-           '--digi-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json', 
-           '--geo-selection-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
-           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event','--loglevel', '5','--sf-minPt','500','--sf-bFieldInZ','1.99724']
+
+    # figure out what is happening with bf constant tesla argument
+    ret = ['python3 /afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks.py',
+           '--ckf_selection_chi2max', '15', 
+           '--ckf_selection_nmax', '10', 
+           '--ckf_selection_abseta_bins', [],
+           '--digi_config_file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json', 
+           '--geo_selection_config_file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
+           '--output_ML','True','--input_dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event_root','--loglevel', '5','--sf_minPt','500','--sf_bFieldInZ','1.99724']
            #'--sf-rMax', '200',
            #'--sf-collisionRegionMin','-250','--sf-collisionRegionMax','250','--sf-zMin','-2000','--sf-zMax','2000',
            #'--sf-cotThetaMax','7.40627','--sf-minPt','500','--sf-bFieldInZ','1.99724']
@@ -68,7 +71,7 @@ def paramsToInput(params,names):
         raise Exception("Length of Params must equal names in paramsToInput")
     i = 0
     for param in params:
-        arg = "--sf-" + names[i]
+        arg = "--sf_" + names[i]
         ret.append(arg)
         paramValue = param
         ret.append(str(paramValue))
@@ -84,6 +87,7 @@ def executeAlg(arg):
     p1_out, p1_err = p2.communicate()
     p1_out = p1_out.decode()
     p1_out = p1_out.strip().encode()
+    # Add timing here, or just add to mlTag info
     p2 = subprocess.Popen(
         ['grep', 'mlTag'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     output = p2.communicate(input=p1_out)[0].decode().strip()
