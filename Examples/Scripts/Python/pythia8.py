@@ -20,7 +20,7 @@ def runPythia8(
 
     # Sequencer
     s = s or acts.examples.Sequencer(
-        events=10, numThreads=-1, logLevel=acts.logging.INFO
+        events=1, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     evGen = addPythia8(s, rnd)
