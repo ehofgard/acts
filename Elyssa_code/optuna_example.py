@@ -57,13 +57,8 @@ def paramsToInput(params,names):
     #names = list(saved_args.keys())
 
     # figure out what is happening with bf constant tesla argument
-    ret = ['python3 /afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks.py',
-           '--ckf_selection_chi2max', '15', 
-           '--ckf_selection_nmax', '10', 
-           '--ckf_selection_abseta_bins', [],
-           '--digi_config_file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json', 
-           '--geo_selection_config_file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
-           '--output_ML','True','--input_dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event_root','--loglevel', '5','--sf_minPt','500','--sf_bFieldInZ','1.99724']
+    # need to regenerate data because this isn't working
+    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks.py','--input_dir', '/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event/']
            #'--sf-rMax', '200',
            #'--sf-collisionRegionMin','-250','--sf-collisionRegionMax','250','--sf-zMin','-2000','--sf-zMax','2000',
            #'--sf-cotThetaMax','7.40627','--sf-minPt','500','--sf-bFieldInZ','1.99724']
@@ -83,15 +78,28 @@ def paramsToInput(params,names):
 def executeAlg(arg):
     #sys.path.remove('/afs/cern.ch/user/e/ehofgard/.local/lib/python3.7/site-packages')
     p2 = subprocess.Popen(
-        arg, bufsize=4096, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        arg, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE, universal_newlines=False)
+    p2.stdin.flush()
+    p2.stdout.flush()
     p1_out, p1_err = p2.communicate()
     p1_out = p1_out.decode()
     p1_out = p1_out.strip().encode()
+    print(p1_out)
     # Add timing here, or just add to mlTag info
     p2 = subprocess.Popen(
         ['grep', 'mlTag'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    p2.stdin.flush()
+    p2.stdout.flush()
     output = p2.communicate(input=p1_out)[0].decode().strip()
     tokenizedOutput = output.split(',')
+    # this is a really dumb way to do this
+    # otherwise would have to go into sequencer code
+    p3 = subprocess.Popen(
+        ['grep', 'Average time per event'], stdin = subprocess.PIPE, stdout=subprocess.PIPE)
+    output = p3.communicate(input = p1_out)[0].decode().strip()
+    print(output)
+    time = output.split(':')[-1]
+    time = float(time.split(' ')[1])
     ret = {}
     if len(tokenizedOutput) != 1:
         ret['eff'] = float(tokenizedOutput[2])
@@ -188,7 +196,7 @@ def objective(trial):
 # optuna.delete_study(study_name="CKF-study-nostart_defaultconfig_K3_fake_moreparams_trial2")
 #,storage="sqlite:///{}.db".format("CKF-study-nostart_defaultconfig_K3_fake_moreparams_trial2"))
 optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
-study_name = "CKF-study-nostart_defaultconfig_K3_fake_moreparams_trial2"  # Unique identifier of the study.
+study_name = "test_study"  # Unique identifier of the study.
 storage_name = "sqlite:///{}.db".format(study_name)
 study = optuna.create_study(study_name=study_name, load_if_exists = True,direction='maximize')
 

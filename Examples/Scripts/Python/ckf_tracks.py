@@ -24,7 +24,7 @@ def runCKFTracks(
     s=None,
 ):
 
-    s = s or Sequencer(events=100, numThreads=-1)
+    s = s or Sequencer(events=10, numThreads=-1)
 
     logger = acts.logging.getLogger("CKFExample")
 
@@ -514,15 +514,14 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--digi_config_file",
-        default = "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        type = Path,
+        default = "/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         help = "Digi config file" 
     )
 
     p.add_argument(
         "--geo_selection_config_file",
-        default = "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        type = Path,
+        default = "/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        #type = Path,
         help = "Geo config file"
     )
 
@@ -550,10 +549,8 @@ if "__main__" == __name__:
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=srcdir
-        / args.geo_selection_config_file,
-        digiConfigFile=srcdir
-        / args.digi_config_file,
+        geometrySelection=args.geo_selection_config_file,
+        digiConfigFile=args.digi_config_file,
         outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
