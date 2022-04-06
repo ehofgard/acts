@@ -20,6 +20,7 @@ def addPythia8(
     cmsEnergy: Optional[float] = None,  # default: 14 * acts.UnitConstants.TeV
     hardProcess: Optional[Iterable] = None,  # default: ["HardQCD:all = on"]
     pileupProcess: Iterable = ["SoftQCD:all = on"],
+    #pileupProcess: Iterable = ["Top:qqbar2ttbar = on"],
     vtxGen: Optional[acts.examples.EventGenerator.VertexGenerator] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -161,7 +162,7 @@ def runPythia8(
 
     # Sequencer
     s = s or acts.examples.Sequencer(
-        events=10, numThreads=-1, logLevel=acts.logging.INFO
+        events=1, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     return addPythia8(
@@ -173,4 +174,5 @@ def runPythia8(
 
 
 if "__main__" == __name__:
-    runPythia8(Path.cwd()).run()
+    
+    runPythia8("/afs/cern.ch/work/e/ehofgard/acts/data/sim_python/pythia8_1event/").run()

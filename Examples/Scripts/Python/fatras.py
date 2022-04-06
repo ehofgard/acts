@@ -146,7 +146,8 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
         EtaConfig(-2.0, 2.0),
         rnd=rnd,
     )
-    outputDir = Path(outputDir)
+    # dumb need to make directories here
+    outputDir = Path('/afs/cern.ch/work/e/ehofgard/acts/data/sim_python/test/')
     return addFatras(
         s,
         trackingGeometry,
