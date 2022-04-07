@@ -42,17 +42,20 @@ def paramsToInput(saved_args):
     # just adding bFieldInZ as parameter here, doesn't really make sense to adjust
     params = list(saved_args.values())
     names = list(saved_args.keys())
+    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks.py','--input_dir', '/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event/']
+    '''
     ret = ['/afs/cern.ch/work/e/ehofgard/acts/build/bin/ActsExampleCKFTracksGeneric',
            '--ckf-selection-chi2max', '15', '--bf-constant-tesla=0:0:2',
            '--ckf-selection-nmax', '10', 
            '--digi-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json', 
            '--geo-selection-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
            '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event','--loglevel', '5']
+    '''
     if len(params) != len(names):
         raise Exception("Length of Params must equal names in paramsToInput")
     i = 0
     for param in params:
-        arg = "--sf-" + names[i]
+        arg = "--sf_" + names[i]
         ret.append(arg)
         paramValue = param
         ret.append(str(paramValue))

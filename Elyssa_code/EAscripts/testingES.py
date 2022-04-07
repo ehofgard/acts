@@ -109,7 +109,7 @@ def indPrint(ind):
     newInd = normalizedToActual(ind)
     commandLineInd = ''
     for argName in newInd:
-        commandLineInd += ("--sf-" + argName + " " +
+        commandLineInd += ("--sf_" + argName + " " +
                            str(newInd[argName]) + " ")
     print(commandLineInd)
 
@@ -117,6 +117,8 @@ def indPrint(ind):
 # Assumes program is in same directory as seeding algorithm
 def paramsToInput(params, names):
     # just adding bFieldInZ as parameter here, doesn't really make sense to adjust
+    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks.py','--input_dir', '/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event/']
+    '''
     ret = ['/afs/cern.ch/work/e/ehofgard/acts/build/bin/ActsExampleCKFTracksGeneric',
            '--ckf-selection-chi2max', '15', '--bf-constant-tesla=0:0:2',
            '--ckf-selection-nmax', '10', 
@@ -124,6 +126,7 @@ def paramsToInput(params, names):
            '--geo-selection-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
            '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event',
            '--loglevel', '5','--sf-bFieldInZ', '1.99724']#,'--sf-collisionRegionMin','-250','--sf-collisionRegionMax','250','--sf-zMin','-2000','--sf-zMax','2000']
+    '''
     '''
     if (ttbarSampleBool):
         ret.append(ttbarSampleInput[0])
@@ -137,25 +140,25 @@ def paramsToInput(params, names):
     i = 0
     for param in params:
         if names[i] == 'collisionReg':
-            arg = "--sf-collisionRegionMin" 
+            arg = "--sf_collisionRegionMin" 
             ret.append(arg)
             paramValue = -1*param
             ret.append(str(paramValue))
-            arg = "--sf-collisionRegionMax"
+            arg = "--sf_collisionRegionMax"
             ret.append(arg)
             paramValue = param
             ret.append(str(paramValue))
         elif names[i] == 'z':
-            arg = '--sf-zMin'
+            arg = '--sf_zMin'
             ret.append(arg)
             paramValue = -1*param
             ret.append(str(paramValue))
-            arg = "--sf-zMax"
+            arg = "--sf_zMax"
             ret.append(arg)
             paramValue = param
             ret.append(str(paramValue))
         else:
-            arg = "--sf-" + names[i]
+            arg = "--sf_" + names[i]
             ret.append(arg)
             paramValue = param
             ret.append(str(paramValue))
