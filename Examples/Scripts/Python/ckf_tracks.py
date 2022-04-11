@@ -355,7 +355,7 @@ if "__main__" == __name__:
     )
     p.add_argument(
         "--sf_minPt",
-        default = 500.0,
+        default = 400.0,
         type = float,
         help = "Seed finder minimum pT in MeV."
     )
@@ -369,70 +369,70 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--sf_deltaRMin",
-        default = 1.0,
+        default = 5.0,
         type = float,
         help = "Minimum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
         "--sf_deltaRMax",
-        default = 60.0,
+        default = 270.0,
         type = float,
         help = "Maximum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
         "--sf_impactMax",
-        default = 3.0,
+        default = 20.0,
         type = float,
         help = "max impact parameter in mm"
     )
 
     p.add_argument(
         "--sf_sigmaScattering",
-        default = 50.0,
+        default = 5.0,
         type = float,
         help = "How many sigmas of scattering to include in seeds"
     )
 
     p.add_argument(
         "--sf_maxSeedsPerSpM",
-        default = 1,
+        default = 5,
         type = int,
         help = "How many seeds can share one middle SpacePoint"
     )
 
     p.add_argument(
         "--sf_collisionRegionMin",
-        default = -250.0,
+        default = -150.0,
         type = float,
         help = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
         "--sf_collisionRegionMax",
-        default = 250.0,
+        default = 150.0,
         type = float,
         help = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
         "--sf_zMin",
-        default = -2000.0,
+        default = -2800.0,
         type = float,
         help = "Minimum z of space points included in algorithm"
     )
 
     p.add_argument(
         "--sf_zMax",
-        default = 2000.0,
+        default = 2800.0,
         type = float,
         help = "Maximum z of space points included in algorithm"
     )
 
     p.add_argument(
         "--sf_rMax",
-        default = 200.0,
+        default = 600.0,
         type = float,
         help = "Max radius of Space Points included in algorithm in mm"
     )
@@ -453,7 +453,7 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--sf_radLengthPerSeed",
-        default = 0.1,
+        default = 0.05,
         type = float,
         help = "Average radiation length"
     )
@@ -508,7 +508,7 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--outputIsML",
-        default = True,
+        default = False,
         type = bool,
         help = "Prints formatted output for Optuna/optimization algs if true"
     )
