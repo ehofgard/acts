@@ -87,7 +87,7 @@ def addParticleGun(
         acts.examples.dump_args_calls(locals())
 
     # Preliminaries
-    rnd = rnd or RandomNumbers(seed=228)
+    rnd = rnd or RandomNumbers(seed=42)
 
     # Input
     evGen = EventGenerator(

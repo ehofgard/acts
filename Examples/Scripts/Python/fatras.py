@@ -15,6 +15,7 @@ def addFatras(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
+    # changing this to false
     preselectParticles: bool = True,
 ) -> acts.examples.Sequencer:
     """This function steers the detector simulation using Fatras
@@ -47,6 +48,13 @@ def addFatras(
                 level=s.config.logLevel,
                 inputParticles="particles_input",
                 outputParticles=particles_selected,
+                removeNeutral=True,
+                # generic detector
+                #absEtaMax=2.5
+                #ptMin = 500*u.MeV,
+                #ItK detector
+                absEtaMax = 4.0,
+                ptMin = 1*u.GeV,
             )
         )
     else:
@@ -147,7 +155,7 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
         rnd=rnd,
     )
     # dumb need to make directories here
-    outputDir = Path('/afs/cern.ch/work/e/ehofgard/acts/data/sim_python/test/')
+    outputDir = Path(outputDir)
     return addFatras(
         s,
         trackingGeometry,

@@ -124,6 +124,7 @@ def runCKFTracks(
         level=acts.logging.INFO,
         # ItK detector
         ptMin=1 * u.GeV,
+        # change to 6
         nHitsMin=9,
         absEtaMax = 4.0,
         inputParticles=simAlg.config.outputParticlesInitial,
@@ -457,7 +458,7 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--sf_rMin",
-        default = 33.0,
+        default = None,
         type = float,
         help = "Min radius of Space Points included in algorithm in mm"
     )

@@ -2,8 +2,9 @@
 import pathlib, acts, acts.examples, itk
 
 u = acts.UnitConstants
-geo_dir = pathlib.Path("acts-detector-examples")
-outputDir = pathlib.Path.cwd()
+geo_dir = pathlib.Path("/afs/cern.ch/work/e/ehofgard/acts-detector-examples/acts-detector-examples")
+outputDir = pathlib.Path("/afs/cern.ch/work/e/ehofgard/acts/data/ckf_results/itk_full_chain_results")
+#outputDir = pathlib.Path.cwd()
 
 detector, trackingGeometry, decorators = itk.buildITkGeometry(geo_dir)
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
