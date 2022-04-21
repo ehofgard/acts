@@ -26,7 +26,7 @@ def runCKFTracks(
     s=None,
 ):
 
-    s = s or Sequencer(events=1, numThreads=-1)
+    s = s or Sequencer(events=100, numThreads=-1)
 
     logger = acts.logging.getLogger("CKFExample")
 
@@ -42,16 +42,19 @@ def runCKFTracks(
             level=acts.logging.INFO,
             generators=[
                 acts.examples.EventGenerator.Generator(
-                    multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
+                    multiplicity=acts.examples.FixedMultiplicityGenerator(n=1),
                     vertex=acts.examples.GaussianVertexGenerator(
                         stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
                     ),
                     particles=acts.examples.ParametricParticleGenerator(
                         p=(1 * u.GeV, 10 * u.GeV),
-                        eta=(-2, 2),
-                        phi=(0, 360 * u.degree),
+                        pTransverse = True,
+                        eta=(-4, 4),
+                        etaUniform = True,
+                        #phi=(0, 360 * u.degree),
                         randomizeCharge=True,
-                        numParticles=100,
+                        numParticles=1,
+                        pdg = acts.PdgParticle.eMuon,
                     ),
                 )
             ],
@@ -75,13 +78,15 @@ def runCKFTracks(
 
     # Selector
     # Try commenting this out
-    preselectParticles = False
+    preselectParticles = True
     if preselectParticles:
         particles_selected = "particles_selected"
         selector = acts.examples.ParticleSelector(
             level=acts.logging.INFO,
             inputParticles=inputParticles,
             outputParticles=particles_selected,
+            absEtaMax = 4.0,
+            ptMin = 1*u.GeV,
         )
         s.addAlgorithm(selector)
     else:
@@ -117,8 +122,10 @@ def runCKFTracks(
     # has no impact on the truth hits themselves
     selAlg = acts.examples.TruthSeedSelector(
         level=acts.logging.INFO,
-        ptMin=500 * u.MeV,
+        # ItK detector
+        ptMin=1 * u.GeV,
         nHitsMin=9,
+        absEtaMax = 4.0,
         inputParticles=simAlg.config.outputParticlesInitial,
         inputMeasurementParticlesMap=digiCfg.outputMeasurementParticlesMap,
         outputParticles="particles_seed_selected",
@@ -233,14 +240,15 @@ def runCKFTracks(
             inputSeeds = seeding.config.outputSeeds
 
         # Write truth track finding / seeding performance
-        trackFinderPerformanceWriter = acts.examples.TrackFinderPerformanceWriter(
-            level=acts.logging.INFO,
-            inputProtoTracks=inputProtoTracks,
-            inputParticles=inputParticles,  # the original selected particles after digitization
-            inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
-            filePath=str(outputDir / "performance_seeding_trees.root"),
-        )
-        s.addWriter(trackFinderPerformanceWriter)
+        if args.outputIsML == False:
+            trackFinderPerformanceWriter = acts.examples.TrackFinderPerformanceWriter(
+                level=acts.logging.INFO,
+                inputProtoTracks=inputProtoTracks,
+                inputParticles=inputParticles,  # the original selected particles after digitization
+                inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+                filePath=str(outputDir / "performance_seeding_trees.root"),
+            )
+            s.addWriter(trackFinderPerformanceWriter)
 
         # Estimate track parameters from seeds
         paramEstimation = acts.examples.TrackParamsEstimationAlgorithm(
@@ -287,36 +295,38 @@ def runCKFTracks(
     s.addAlgorithm(trackFinder)
 
     # write track states from CKF
-    trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
-        level=acts.logging.INFO,
-        inputTrajectories=trackFinder.config.outputTrajectories,
-        # @note The full particles collection is used here to avoid lots of warnings
-        # since the unselected CKF track might have a majority particle not in the
-        # filtered particle collection. This could be avoided when a seperate track
-        # selection algorithm is used.
-        inputParticles=particles_selected,
-        inputSimHits=simAlg.config.outputSimHits,
-        inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
-        inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
-        filePath=str(outputDir / "trackstates_ckf.root"),
-        treeName="trackstates",
-    )
-    s.addWriter(trackStatesWriter)
+    if args.outputIsML == False:
+        trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
+            level=acts.logging.INFO,
+            inputTrajectories=trackFinder.config.outputTrajectories,
+            # @note The full particles collection is used here to avoid lots of warnings
+            # since the unselected CKF track might have a majority particle not in the
+            # filtered particle collection. This could be avoided when a seperate track
+            # selection algorithm is used.
+            inputParticles=particles_selected,
+            inputSimHits=simAlg.config.outputSimHits,
+            inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            filePath=str(outputDir / "trackstates_ckf.root"),
+            treeName="trackstates",
+        )
+        s.addWriter(trackStatesWriter)
 
     # write track summary from CKF
-    trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
-        level=acts.logging.INFO,
-        inputTrajectories=trackFinder.config.outputTrajectories,
-        # @note The full particles collection is used here to avoid lots of warnings
-        # since the unselected CKF track might have a majority particle not in the
-        # filtered particle collection. This could be avoided when a seperate track
-        # selection algorithm is used.
-        inputParticles=particles_selected,
-        inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
-        filePath=str(outputDir / "tracksummary_ckf.root"),
-        treeName="tracksummary",
-    )
-    s.addWriter(trackSummaryWriter)
+    if args.outputIsML == False:
+        trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
+            level=acts.logging.INFO,
+            inputTrajectories=trackFinder.config.outputTrajectories,
+            # @note The full particles collection is used here to avoid lots of warnings
+            # since the unselected CKF track might have a majority particle not in the
+            # filtered particle collection. This could be avoided when a seperate track
+            # selection algorithm is used.
+            inputParticles=particles_selected,
+            inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+            filePath=str(outputDir / "tracksummary_ckf.root"),
+            treeName="tracksummary",
+        )
+        s.addWriter(trackSummaryWriter)
 
     # Write CKF performance data
     ckfPerfWriterConfig = acts.examples.CKFPerformanceWriter.Config(
@@ -357,12 +367,13 @@ def runCKFTracks(
 
 if "__main__" == __name__:
     # Insert argument parser dudes
+    # defaults are in ckf_tracks.py
     p = argparse.ArgumentParser(
         description = "Example script to run the generic detector with parameter changes",
     )
     p.add_argument(
         "--sf_minPt",
-        default = 400.0,
+        default = 500.0,
         type = float,
         help = "Seed finder minimum pT in MeV."
     )
@@ -376,70 +387,70 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--sf_deltaRMin",
-        default = 5.0,
+        default = 1.0,
         type = float,
         help = "Minimum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
         "--sf_deltaRMax",
-        default = 270.0,
+        default = 60,
         type = float,
         help = "Maximum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
         "--sf_impactMax",
-        default = 20.0,
+        default = 3.0,
         type = float,
         help = "max impact parameter in mm"
     )
 
     p.add_argument(
         "--sf_sigmaScattering",
-        default = 5.0,
+        default = 50,
         type = float,
         help = "How many sigmas of scattering to include in seeds"
     )
 
     p.add_argument(
         "--sf_maxSeedsPerSpM",
-        default = 5,
+        default = 1,
         type = int,
         help = "How many seeds can share one middle SpacePoint"
     )
 
     p.add_argument(
         "--sf_collisionRegionMin",
-        default = -150.0,
+        default = -250.0,
         type = float,
         help = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
         "--sf_collisionRegionMax",
-        default = 150.0,
+        default = 250.0,
         type = float,
         help = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
         "--sf_zMin",
-        default = -2800.0,
+        default = -2000.0,
         type = float,
         help = "Minimum z of space points included in algorithm"
     )
 
     p.add_argument(
         "--sf_zMax",
-        default = 2800.0,
+        default = 2000.0,
         type = float,
         help = "Maximum z of space points included in algorithm"
     )
 
     p.add_argument(
         "--sf_rMax",
-        default = 600.0,
+        default = 200.0,
         type = float,
         help = "Max radius of Space Points included in algorithm in mm"
     )
@@ -460,7 +471,7 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--sf_radLengthPerSeed",
-        default = 0.05,
+        default = 0.1,
         type = float,
         help = "Average radiation length"
     )
@@ -513,10 +524,11 @@ if "__main__" == __name__:
         help = "bins in |eta| to specify variable selections"
     )
 
+    # parser.add_argument('-b', action='store_true', default=False)
     p.add_argument(
         "--outputIsML",
-        default = True,
-        type = bool,
+        default = False,
+        action='store_true',
         help = "Prints formatted output for Optuna/optimization algs if true"
     )
 
@@ -548,7 +560,7 @@ if "__main__" == __name__:
     geo_dir = Path("/afs/cern.ch/work/e/ehofgard/acts-detector-examples/acts-detector-examples")
     detector, trackingGeometry, decorators = itk.buildITkGeometry(geo_dir)
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    #detector, trackingGeometry, decorators = GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -562,7 +574,7 @@ if "__main__" == __name__:
         field=field,
         geometrySelection=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
         digiConfigFile=geo_dir / "atlas/itk-hgtd/itk-smearing-config.json",
-        outputCsv=True,
+        outputCsv=False,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
         inputParticlePath=inputParticlePath,
