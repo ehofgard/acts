@@ -38,8 +38,9 @@ SeedfinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
         "beamPos",  # (x,y)
+        "maxPtScattering",
     ],
-    defaults=[None] * 7 + [(None, None)] * 5,
+    defaults=[None] * 8 + [(None, None)] * 5,
 )
 
 TrackParamsEstimationConfig = namedtuple(
@@ -96,7 +97,7 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedfinderConfigArg : SeedfinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, deltaR, collisionRegion, r, z, beamPos)
+    seedfinderConfigArg : SeedfinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, deltaR, collisionRegion, r, z, beamPos, maxPtScattering)
         SeedfinderConfig settings. deltaR, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedfinderConfig.hpp
     trackParamsEstimationConfig : TrackParamsEstimationConfig(deltaR)
@@ -237,6 +238,7 @@ def addSeeding(
                             seedfinderConfigArg.beamPos[1] or 0.0,
                         )
                     ),
+                    maxPtScattering = seedfinderConfigArg.maxPtScattering,
                 ),
             )
 
