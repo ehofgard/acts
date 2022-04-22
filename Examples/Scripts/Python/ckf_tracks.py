@@ -21,6 +21,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
+    outputIsML: bool = False,
 ) -> acts.examples.Sequencer:
     """This function steers the seeding
     Parameters
@@ -61,55 +62,57 @@ def addCKFTracks(
     )
     s.addAlgorithm(trackFinder)
 
-    if outputDirRoot is not None:
-        outputDirRoot = Path(outputDirRoot)
-        if not outputDirRoot.exists():
-            outputDirRoot.mkdir()
+    if outputIsML == False:
+        if outputDirRoot is not None:
+            outputDirRoot = Path(outputDirRoot)
+            if not outputDirRoot.exists():
+                outputDirRoot.mkdir()
 
-        # write track states from CKF
-        trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputSimHits="simhits",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            inputMeasurementSimHitsMap="measurement_simhits_map",
-            filePath=str(outputDirRoot / "trackstates_ckf.root"),
-            treeName="trackstates",
-        )
-        s.addWriter(trackStatesWriter)
+            # write track states from CKF
+            trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
+                level=s.config.logLevel,
+                inputTrajectories=trackFinder.config.outputTrajectories,
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection. This could be avoided when a seperate track
+                # selection algorithm is used.
+                inputParticles="particles_selected",
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                filePath=str(outputDirRoot / "trackstates_ckf.root"),
+                treeName="trackstates",
+            )
+            s.addWriter(trackStatesWriter)
 
-        # write track summary from CKF
-        trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "tracksummary_ckf.root"),
-            treeName="tracksummary",
-        )
-        s.addWriter(trackSummaryWriter)
+            # write track summary from CKF
+            trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
+                level=s.config.logLevel,
+                inputTrajectories=trackFinder.config.outputTrajectories,
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection. This could be avoided when a seperate track
+                # selection algorithm is used.
+                inputParticles="particles_selected",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                filePath=str(outputDirRoot / "tracksummary_ckf.root"),
+                treeName="tracksummary",
+            )
+            s.addWriter(trackSummaryWriter)
 
-        # Write CKF performance data
-        ckfPerfWriter = acts.examples.CKFPerformanceWriter(
-            level=s.config.logLevel,
-            inputParticles=selectedParticles,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            # The bottom seed could be the first, second or third hits on the truth track
-            nMeasurementsMin=truthSeedRanges.nHits[0],
-            ptMin=truthSeedRanges.pt[0],
-            filePath=str(outputDirRoot / "performance_ckf.root"),
-        )
-        s.addWriter(ckfPerfWriter)
+    # Write CKF performance data
+    ckfPerfWriter = acts.examples.CKFPerformanceWriter(
+        level=s.config.logLevel,
+        inputParticles=selectedParticles,
+        inputTrajectories=trackFinder.config.outputTrajectories,
+        inputMeasurementParticlesMap="measurement_particles_map",
+        # The bottom seed could be the first, second or third hits on the truth track
+        nMeasurementsMin=truthSeedRanges.nHits[0],
+        ptMin=truthSeedRanges.pt[0],
+        filePath=str(outputDirRoot / "performance_ckf.root"),
+        outputIsML = outputIsML,
+    )
+    s.addWriter(ckfPerfWriter)
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)

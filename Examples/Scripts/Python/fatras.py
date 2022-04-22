@@ -17,6 +17,7 @@ def addFatras(
     rnd: Optional[acts.examples.RandomNumbers] = None,
     # changing this to false
     preselectParticles: bool = True,
+    outputIsML: bool = True,
 ) -> acts.examples.Sequencer:
     """This function steers the detector simulation using Fatras
 
@@ -90,7 +91,7 @@ def addFatras(
             )
         )
 
-    if outputDirRoot is not None:
+    if outputDirRoot is not None and outputIsML == False:
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -112,7 +113,7 @@ def addFatras(
             )
         )
 
-    if outputDirRoot is not None:
+    if outputDirRoot is not None and outputIsML == False:
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=s.config.logLevel,
@@ -121,7 +122,7 @@ def addFatras(
             )
         )
 
-    if outputDirCsv is not None:
+    if outputDirCsv is not None and outputIsML == False:
         s.addWriter(
             acts.examples.CsvSimHitWriter(
                 level=s.config.logLevel,

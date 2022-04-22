@@ -39,6 +39,7 @@ SeedfinderConfigArg = namedtuple(
         "z",  # (min,max)
         "beamPos",  # (x,y)
         "maxPtScattering",
+        #"outputIsML",
     ],
     defaults=[None] * 8 + [(None, None)] * 5,
 )
@@ -75,6 +76,7 @@ def addSeeding(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
+    outputIsML: bool = True,
 ) -> acts.examples.Sequencer:
     """This function steers the seeding
 
@@ -97,7 +99,7 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedfinderConfigArg : SeedfinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, deltaR, collisionRegion, r, z, beamPos, maxPtScattering)
+    seedfinderConfigArg : SeedfinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, deltaR, collisionRegion, r, z, beamPos, maxPtScattering,outputIsML)
         SeedfinderConfig settings. deltaR, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedfinderConfig.hpp
     trackParamsEstimationConfig : TrackParamsEstimationConfig(deltaR)
@@ -293,39 +295,40 @@ def addSeeding(
             outputDirRoot = Path(outputDirRoot)
             if not outputDirRoot.exists():
                 outputDirRoot.mkdir()
-            s.addWriter(
-                acts.examples.TrackFinderPerformanceWriter(
-                    level=customLogLevel(),
-                    inputProtoTracks=inputProtoTracks,
-                    inputParticles=selectedParticles,  # the original selected particles after digitization
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
-                    filePath=str(outputDirRoot / "performance_seeding_trees.root"),
+            if outputIsML == False:
+                s.addWriter(
+                    acts.examples.TrackFinderPerformanceWriter(
+                        level=customLogLevel(),
+                        inputProtoTracks=inputProtoTracks,
+                        inputParticles=selectedParticles,  # the original selected particles after digitization
+                        inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                        filePath=str(outputDirRoot / "performance_seeding_trees.root"),
+                    )
                 )
-            )
 
-            s.addWriter(
-                acts.examples.SeedingPerformanceWriter(
-                    level=customLogLevel(acts.logging.DEBUG),
-                    inputProtoTracks=inputProtoTracks,
-                    inputParticles=selectedParticles,
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
-                    filePath=str(outputDirRoot / "performance_seeding_hists.root"),
+                s.addWriter(
+                    acts.examples.SeedingPerformanceWriter(
+                        level=customLogLevel(acts.logging.DEBUG),
+                        inputProtoTracks=inputProtoTracks,
+                        inputParticles=selectedParticles,
+                        inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                        filePath=str(outputDirRoot / "performance_seeding_hists.root"),
+                    )
                 )
-            )
 
-            s.addWriter(
-                acts.examples.RootTrackParameterWriter(
-                    level=customLogLevel(acts.logging.VERBOSE),
-                    inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
-                    inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
-                    inputParticles=inputParticles,
-                    inputSimHits="simhits",
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
-                    inputMeasurementSimHitsMap="measurement_simhits_map",
-                    filePath=str(outputDirRoot / "estimatedparams.root"),
-                    treeName="estimatedparams",
+                s.addWriter(
+                    acts.examples.RootTrackParameterWriter(
+                        level=customLogLevel(acts.logging.VERBOSE),
+                        inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
+                        inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
+                        inputParticles=inputParticles,
+                        inputSimHits="simhits",
+                        inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                        inputMeasurementSimHitsMap="measurement_simhits_map",
+                        filePath=str(outputDirRoot / "estimatedparams.root"),
+                        treeName="estimatedparams",
+                    )
                 )
-            )
 
     return s
 

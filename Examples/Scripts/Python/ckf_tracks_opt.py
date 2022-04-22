@@ -256,6 +256,7 @@ if "__main__" == __name__:
         field,
         outputDirRoot=outdir,
         rnd=rnd,
+        outputIsML = args.outputIsML,
     )
 
     s = addDigitization(
@@ -289,6 +290,7 @@ if "__main__" == __name__:
             impactMax = args.sf_impactMax*u.mm,
             cotThetaMax = args.sf_cotThetaMax,
             maxPtScattering = args.sf_maxPtScattering,
+            #outputIsML = args.outputIsML,
         ),
         geoSelectionConfigFile=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
         outputDirRoot=outdir,
@@ -301,6 +303,7 @@ if "__main__" == __name__:
         field,
         TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(6, None)),
         outputDirRoot=outdir,
+        outputIsML = args.outputIsML,
     )
 
     s.run()
