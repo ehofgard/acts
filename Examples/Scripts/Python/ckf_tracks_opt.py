@@ -23,6 +23,8 @@ from digitization import addDigitization
 from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges,SeedfinderConfigArg,ParticleSmearingSigmas
 from ckf_tracks import addCKFTracks
 from acts import UnitConstants as u
+from acts.examples import Sequencer, GenericDetector, RootParticleReader
+
 
 if "__main__" == __name__:
     # Insert argument parser dudes
@@ -204,6 +206,13 @@ if "__main__" == __name__:
         help = "Geo config file"
     )
 
+    p.add_argument(
+        "--default_arg",
+        default = False,
+        action = 'store_true',
+        help = "Use default arguments in the CKF"
+    )
+
     # Make output directory
     args = p.parse_args()
     outdir = args.output_dir
@@ -226,6 +235,7 @@ if "__main__" == __name__:
     s = acts.examples.Sequencer(events=100, numThreads=-1)
     logger = acts.logging.getLogger("CKFExample")
 
+    default_arg = args.default_arg
 
     if inputParticlePath is None:
         logger.info("Generating particles using particle gun")
@@ -240,12 +250,12 @@ if "__main__" == __name__:
     else:
         logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()
-        inputParticles = "particles_read"
+        #inputParticles = "particles_read"
         s.addReader(
             RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                particleCollection=inputParticles,
+                particleCollection="particles_input",
                 orderedEvents=False,
             )
         )
@@ -295,7 +305,18 @@ if "__main__" == __name__:
         geoSelectionConfigFile=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
         outputDirRoot=outdir,
     )
-
+    '''
+    else:
+        s = addSeeding(
+            s,
+            trackingGeometry,
+            field,
+            TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
+            SeedfinderConfigArg(),
+            geoSelectionConfigFile=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
+            outputDirRoot=outdir,
+        )
+    '''
 
     s = addCKFTracks(
         s,
