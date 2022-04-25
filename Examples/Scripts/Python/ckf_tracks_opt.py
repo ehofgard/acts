@@ -29,89 +29,91 @@ from acts.examples import Sequencer, GenericDetector, RootParticleReader
 if "__main__" == __name__:
     # Insert argument parser dudes
     # defaults are in ckf_tracks.py
+    # change default to ones in itk_seeding.py
     p = argparse.ArgumentParser(
         description = "Example script to run the generic detector with parameter changes",
     )
     p.add_argument(
         "--sf_minPt",
-        default = 500.0,
+        default = 900.0,
         type = float,
         help = "Seed finder minimum pT in MeV."
     )
 
+    # need to rerun optuna with higher cotThetaMax
     p.add_argument(
         "--sf_cotThetaMax",
-        default = 7.40627,
+        default = 27.2899,
         type = float,
         help = "cot of maximum theta angle"
     )
 
     p.add_argument(
         "--sf_deltaRMin",
-        default = 1.0,
+        default = 20.0,
         type = float,
         help = "Minimum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
         "--sf_deltaRMax",
-        default = 60,
+        default = 280,
         type = float,
         help = "Maximum distance in mm between two SPs in a seed"
     )
 
     p.add_argument(
         "--sf_impactMax",
-        default = 3.0,
+        default = 2.0,
         type = float,
         help = "max impact parameter in mm"
     )
 
     p.add_argument(
         "--sf_sigmaScattering",
-        default = 50,
+        default = 2,
         type = float,
         help = "How many sigmas of scattering to include in seeds"
     )
 
     p.add_argument(
         "--sf_maxSeedsPerSpM",
-        default = 1,
+        default = 4,
         type = int,
         help = "How many seeds can share one middle SpacePoint"
     )
 
     p.add_argument(
         "--sf_collisionRegionMin",
-        default = -250.0,
+        default = -200.0,
         type = float,
         help = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
         "--sf_collisionRegionMax",
-        default = 250.0,
+        default = 200.0,
         type = float,
         help = "limiting location of collision region in z in mm"
     )
 
     p.add_argument(
         "--sf_zMin",
-        default = -2000.0,
+        default = -3000.0,
         type = float,
         help = "Minimum z of space points included in algorithm"
     )
 
     p.add_argument(
         "--sf_zMax",
-        default = 2000.0,
+        default = 3000.0,
         type = float,
         help = "Maximum z of space points included in algorithm"
     )
 
     p.add_argument(
         "--sf_rMax",
-        default = 200.0,
+        default = 320.0,
         type = float,
         help = "Max radius of Space Points included in algorithm in mm"
     )
@@ -125,7 +127,7 @@ if "__main__" == __name__:
     # Not adding bFieldInZ or beamPos
     p.add_argument(
         "--sf_maxPtScattering",
-        default = 10000.0,
+        default = float("inf"),
         type = float,
         help = "maximum Pt for scattering cut"
     )
@@ -160,7 +162,8 @@ if "__main__" == __name__:
         type = float,
         help = "Sigma error with seed finding"
     )
-
+    # idk where these are in the python scripts? 
+    
     p.add_argument(
         "--ckf_selection_chi2max",
         default = [15.0],
