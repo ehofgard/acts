@@ -58,7 +58,7 @@ def paramsToInput(params,names):
 
     # figure out what is happening with bf constant tesla argument
     # need to regenerate data because this isn't working
-    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks.py','--input_dir', '/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event/']
+    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks_opt.py','--input_dir', '/afs/cern.ch/work/e/ehofgard/acts/data/gen/ttbar_mu200_1event_test/particles.root','--outputIsML']
            #'--sf-rMax', '200',
            #'--sf-collisionRegionMin','-250','--sf-collisionRegionMax','250','--sf-zMin','-2000','--sf-zMax','2000',
            #'--sf-cotThetaMax','7.40627','--sf-minPt','500','--sf-bFieldInZ','1.99724']
@@ -84,7 +84,7 @@ def executeAlg(arg):
     p1_out, p1_err = p2.communicate()
     p1_out = p1_out.decode()
     p1_out = p1_out.strip().encode()
-    print(p1_out)
+    #print(p1_out)
     # Add timing here, or just add to mlTag info
     p2 = subprocess.Popen(
         ['grep', 'mlTag'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -92,14 +92,17 @@ def executeAlg(arg):
     p2.stdout.flush()
     output = p2.communicate(input=p1_out)[0].decode().strip()
     tokenizedOutput = output.split(',')
+    #print(tokenizedOutput)
     # this is a really dumb way to do this
     # otherwise would have to go into sequencer code
+    '''
     p3 = subprocess.Popen(
         ['grep', 'Average time per event'], stdin = subprocess.PIPE, stdout=subprocess.PIPE)
     output = p3.communicate(input = p1_out)[0].decode().strip()
     print(output)
     time = output.split(':')[-1]
     time = float(time.split(' ')[1])
+    '''
     ret = {}
     if len(tokenizedOutput) != 1:
         ret['eff'] = float(tokenizedOutput[2])
@@ -132,7 +135,7 @@ def objective(trial):
     params = []
     maxPtScattering = trial.suggest_float("maxPtScattering",1200,1234567)
     params.append(maxPtScattering)
-    impactMax = trial.suggest_float("impactMax",0.1,20)
+    impactMax = trial.suggest_float("impactMax",0.1,25)
     params.append(impactMax)
     deltaRMin = trial.suggest_float("deltaRMin", 0.25, 30)
     params.append(deltaRMin)
@@ -144,10 +147,11 @@ def objective(trial):
     params.append(maxSeedsPerSpM)
     radLengthPerSeed = trial.suggest_float("radLengthPerSeed",.001,0.1)
     params.append(radLengthPerSeed)
-    cotThetaMax = trial.suggest_float("cotThetaMax",5.0,15.0)
+    cotThetaMax = trial.suggest_float("cotThetaMax",5.0,10.0)
     params.append(cotThetaMax)
     #sigmaError = trial.suggest_float("sigmaError",2.0,10.0)
     #params.append(sigmaError)
+    '''
     collisionReg = trial.suggest_float("collisionReg",100,350)
     params.append(-1*collisionReg)
     params.append(collisionReg)
@@ -158,8 +162,10 @@ def objective(trial):
     params.append(rMin)
     rMax = trial.suggest_float("rMax",150,600)
     params.append(rMax)
-    keys = ["maxPtScattering","impactMax","deltaRMin", "sigmaScattering", "deltaRMax", "maxSeedsPerSpM", "radLengthPerSeed","cotThetaMax","collisionRegionMin",
-    "collisionRegionMax","zMin","zMax","rMin","rMax"]
+    '''
+    keys = ["maxPtScattering","impactMax","deltaRMin", "sigmaScattering", "deltaRMax", "maxSeedsPerSpM", "radLengthPerSeed","cotThetaMax"]
+    #,"collisionRegionMin",
+    #"collisionRegionMax","zMin","zMax","rMin","rMax"]
     # "sigmaError",
     #params = ["impactMax"]
     for i in range(len(keys)):
@@ -168,7 +174,6 @@ def objective(trial):
     #print(arg)
     #print("hi")
     r = executeAlg(arg)
-    print(r,flush=True)
     if len(r) != 0:
         dup, eff, fake = 100*float(r['dup']), 100*float(r['eff']), 100*float(r['fake'])
         alg_stats["eff"].append(eff)
@@ -196,9 +201,10 @@ def objective(trial):
 # optuna.delete_study(study_name="CKF-study-nostart_defaultconfig_K3_fake_moreparams_trial2")
 #,storage="sqlite:///{}.db".format("CKF-study-nostart_defaultconfig_K3_fake_moreparams_trial2"))
 optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
-study_name = "test_study"  # Unique identifier of the study.
+study_name = "itk_study_100"  # Unique identifier of the study.
 storage_name = "sqlite:///{}.db".format(study_name)
-study = optuna.create_study(study_name=study_name, load_if_exists = True,direction='maximize')
+#optuna.delete_study(study_name=study_name, storage=storage_name)
+study = optuna.create_study(study_name=study_name, load_if_exists =True,direction='maximize')
 
 # Add initial parameters
 # Also enqueue previously found parameters
@@ -219,38 +225,39 @@ study.enqueue_trial(
 
 # Try visualization for parameter space
 
-study.optimize(objective, n_trials=1,n_jobs=-1)
+study.optimize(objective, n_trials=100)
+#,n_jobs=-1)
 print("Best trial until now:",flush=True)
 print(" Value: ", study.best_trial.value,flush=True)
 print(" Params: ",flush=True)
 for key, value in study.best_trial.params.items():
     print(f"    {key}: {value}",flush=True)
 
-with open('all_results_optuna_250.json', 'w') as fp:
+with open('optuna_itk_test/all_results_itk_test.json', 'w') as fp:
     json.dump(alg_stats,fp)
 
 fig_hist = plot_optimization_history(study)
-fig_hist.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams_trial2/opt_history.jpeg")
+fig_hist.write_image("optuna_itk_test/opt_history.jpeg")
 #fig_contour = plot_contour(study, params=["maxPtScattering","impactMax",
 #"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
 #fig_contour.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_contour.jpeg")
 fig_parallel = plot_parallel_coordinate(study,params=["maxPtScattering","impactMax",
-"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed","cotThetaMax",
-"collisionReg","z","rMin","rMax"])
-fig_parallel.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams_trial2/opt_parallel.jpeg")
+    "deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed","cotThetaMax"])
+#"collisionReg","z","rMin","rMax"])
+fig_parallel.write_image("optuna_itk_test/opt_parallel.jpeg")
 fig_slice1 = plot_slice(study,params=["maxPtScattering","impactMax",
 "deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM"])
-fig_slice1.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams_trial2/opt_slice1.jpeg")
-fig_slice2 = plot_slice(study, params = ["radLengthPerSeed","cotThetaMax",
-"collisionReg","z","rMin","rMax"])
-fig_slice2.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams_trial2/opt_slice2.jpeg")
+fig_slice1.write_image("optuna_itk_test/opt_slice1.jpeg")
+fig_slice2 = plot_slice(study, params = ["radLengthPerSeed","cotThetaMax"])
+#"collisionReg","z","rMin","rMax"])
+fig_slice2.write_image("optuna_itk_test/opt_slice2.jpeg")
 fig_importance = plot_param_importances(study)
-fig_importance.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams_trial2/opt_import.jpeg")
+fig_importance.write_image("optuna_itk_test/opt_import.jpeg")
 ## Parameters that impact the trial duration
 fig_importance_duration = plot_param_importances(
     study, target=lambda t: t.duration.total_seconds(), target_name="duration"
 )
-fig_importance_duration.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams_trial2/opt_import_duration.jpeg")
+fig_importance_duration.write_image("optuna_itk_test/opt_import_duration.jpeg")
 
 
 
