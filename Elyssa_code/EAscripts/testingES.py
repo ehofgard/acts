@@ -25,8 +25,8 @@ PT_CUT_COLORS = ["b", "r", "g", "k"]
 assert len(PT_CUTS) > 0
 assert len(PT_CUTS) <= len(PT_CUT_COLORS)
 # Define bounds on parameters during training
-MINS = [1200, 0.1, 0.25, 0.2, 50, 0, 0.001,100,3,200,50,1000]#,-300,50,-3000,1000] #, 0.001, 400, 5]
-MAXS = [1234567, 20, 30, 80, 300, 10, 0.5,1000,15,700,300,3000]#,-50,300,-1000,3000]
+MINS = [1200, 0.1, 0.25, 0.2, 50, 0, 0.001,5]#,-300,50,-3000,1000] #, 0.001, 400, 5]
+MAXS = [1234567, 20, 30, 50, 300, 10, 0.1,12]#,-50,300,-1000,3000]
 #MAXS = [1234567, 50, 100, 100, 200, 10, 10]
 #MAXS = [1234567, 20, 30, 10, 200, 4, 0.02] #, 0.003, 600, 10]
 # Dictionary of normalization coefficients
@@ -47,9 +47,9 @@ MAXS = [1234567, 20, 30, 80, 300, 10, 0.5,1000,15,700,300,3000]#,-50,300,-1000,3
 #NAME_TO_FACTOR = OrderedDict([('maxPtScattering', 10000), ('impactMax', 3), ('deltaRMin', 1), ('sigmaScattering', 50), ('deltaRMax', 60.0), ('maxSeedsPerSpM', 1.0), ('radLengthPerSeed', 0.1), ('minPt', 500), ('cotThetaMax', 7.40627),
 #('rMax', 600), ('collisionReg', 150), ('z', 2800)])#,('collisionRegionMin', -250), ('collisionRegionMax', 250),('zMin',-2000),('zMax',2000)])
 # just have one variable for collision region
-NAME_TO_FACTOR = OrderedDict([('maxPtScattering', 30000), ('impactMax', 1.1), ('deltaRMin', 0.25), ('sigmaScattering', 4.0), ('deltaRMax', 60.0), ('maxSeedsPerSpM', 1.0), ('radLengthPerSeed', 0.0023), ('minPt', 500), ('cotThetaMax', 7.40627),
-('rMax', 600), ('collisionReg', 150), ('z', 2800)])
-myGuess = [30000, 1.1, 0.25,4.0, 60, 1, .1, 500, 7.40627, 600,150,2800]#, -250, 250, -2000, 2000]
+NAME_TO_FACTOR = OrderedDict([('maxPtScattering', 10000), ('impactMax', 2.0), ('deltaRMin', 20), ('sigmaScattering', 2), ('deltaRMax', 280), \
+('maxSeedsPerSpM', 1.0), ('radLengthPerSeed', 0.1), ('cotThetaMax', 7.40627)])
+myGuess = [10000, 2, 20,2.0, 280, 1, .1, 7.40627]#, -250, 250, -2000, 2000]
 NAME_TO_INDEX = {}
 for i, oneName in enumerate(NAME_TO_FACTOR):
     myGuess[i] *= 1.0 / NAME_TO_FACTOR[oneName]
@@ -57,10 +57,10 @@ for i, oneName in enumerate(NAME_TO_FACTOR):
     MAXS[i] *= 1.0 / NAME_TO_FACTOR[oneName]
     NAME_TO_INDEX[oneName] = i
 # used to be 16, seeing if it will time out with 10
-NGEN = 50 # Number of generations
+NGEN = 30 # Number of generations
 # changing to 1
 BIGK = 3
-plotDirectory = "zEAttbar200pileup_1event_symmetriccollisionz_bigk3_50gen_startingEAparams" #"zzTestingITK_k100,000_gen200" #"yES_7params_scored4_muon_gen" + str(NGEN) + "_pop50_srange0.01-0.3_eval1" # "zES_7params_scored1_muon_gen200_pop50_srange0.01-0.3_eval2" # Where to save the plots
+plotDirectory = "itk_EA_1event_30gen" #"zzTestingITK_k100,000_gen200" #"yES_7params_scored4_muon_gen" + str(NGEN) + "_pop50_srange0.01-0.3_eval1" # "zES_7params_scored1_muon_gen200_pop50_srange0.01-0.3_eval2" # Where to save the plots
 plotDirectory += "/"
 ttbarSampleInput = ['--input-dir', 'sim_generic_ATLASB_ttbar_e4_pu200_eta2.5/']
 ttbarSampleBool = False
@@ -117,24 +117,8 @@ def indPrint(ind):
 # Assumes program is in same directory as seeding algorithm
 def paramsToInput(params, names):
     # just adding bFieldInZ as parameter here, doesn't really make sense to adjust
-    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks.py','--input_dir', '/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event/']
-    '''
-    ret = ['/afs/cern.ch/work/e/ehofgard/acts/build/bin/ActsExampleCKFTracksGeneric',
-           '--ckf-selection-chi2max', '15', '--bf-constant-tesla=0:0:2',
-           '--ckf-selection-nmax', '10', 
-           '--digi-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json', 
-           '--geo-selection-config-file', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json',
-           '--output-ML','True','--input-dir=/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event',
-           '--loglevel', '5','--sf-bFieldInZ', '1.99724']#,'--sf-collisionRegionMin','-250','--sf-collisionRegionMax','250','--sf-zMin','-2000','--sf-zMax','2000']
-    '''
-    '''
-    if (ttbarSampleBool):
-        ret.append(ttbarSampleInput[0])
-        ret.append(ttbarSampleInput[1])
-    elif (ITKSampleBool):
-        ret.append(ITKSampleInput[0])
-        ret.append(ITKSampleInput[1])
-    '''
+    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks_opt.py',
+    '--input_dir', '/afs/cern.ch/work/e/ehofgard/acts/data/gen/ttbar_mu200_1event_test/particles.root','--outputIsML']
     if len(params) != len(names):
         raise Exception("Length of Params must equal names in paramsToInput")
     i = 0
@@ -183,68 +167,14 @@ def executeAlg(arg):
         ret['eff'] = float(tokenizedOutput[2])
         ret['fake'] = float(tokenizedOutput[4])
         ret['dup'] = float(tokenizedOutput[6])
-    if len(tokenizedOutput) == 1:
-        print("Timeout error ")
-        print(arg)
-        print(p1_out)
-        print(p1_err)
         return ret
-    if ret['eff'] == 0:
-        print("0 efficiency error: ")
-        print(arg)
-        print(p1_out)
-        print(p1_err)
-    '''
-    tokenizedOutput = output.split(',')
-    eventCount = {'dup': 0, 'eff': 0, 'seeds': 0, 'tSeeds': 0}
-    scoreTotals = {'efficiency': -1, 'fakeRate': -1, 'duplicateRate': -1}
-    # loop over all events
-    for line in tokenizedOutput:
-        if (line.find(mlTag) == -1):
-            # print(f"word not found: {line}")
-            continue
-        # print(f"{line}")
-        # Get data from one event
-        seedingOutput = {'dup': -1, 'eff': -1, 'seeds': -1, 'tSeeds': -1}
-        splittedLine = line.split(',')
-        for word in splittedLine:
-            if (word.find(dupTag) != -1):
-                seedingOutput['dup'] = word[len(dupTag):]
-                eventCount['dup'] += 1
-            elif (word.find(effTag) != -1):
-                seedingOutput['eff'] = (word[len(effTag):])
-                eventCount['eff'] += 1
-            elif (word.find(seedsTag) != -1):
-                seedingOutput['seeds'] = (word[len(seedsTag):])
-                eventCount['seeds'] += 1
-            elif (word.find(truthTag) != -1):
-                seedingOutput['tSeeds'] = (word[len(truthTag):])
-                eventCount['tSeeds'] += 1
-        if seedingOutput['eff'] == -1 or seedingOutput['seeds'] == -1 or seedingOutput['tSeeds'] == -1 or seedingOutput['dup'] == -1:
-            continue
-        efficiency, nSeeds, nTrueSeeds, nDup = float(seedingOutput['eff']), int(seedingOutput['seeds']), int(seedingOutput['tSeeds']), int(seedingOutput['dup'])
-        fakeRate = 100 * (nSeeds - nTrueSeeds) / nSeeds
-        duplicateRate = 100 * nDup / nTrueSeeds
-        scoreTotals["efficiency"] += efficiency
-        scoreTotals["fakeRate"] += fakeRate
-        scoreTotals["duplicateRate"] += duplicateRate
-    nEvents = eventCount['dup']
-    # print(f"N events is {nEvents}")
-    if nEvents != eventCount['eff'] or nEvents != eventCount['seeds'] or nEvents != eventCount['tSeeds']:
-        print(f"Houston, we have a problem. One line was missing information. we had {nEvents} dup events")
-        print("we passed in:")
-        print(arg)
-        print()
-    avgScores = {}
-    for score in scoreTotals.keys():
-        if nEvents == 0:
-            print(f"no events found!")
-            break
-        avgScores[score] = scoreTotals[score] / nEvents
-    # print(avgScores)
-    return avgScores
-    '''
-    return ret
+    else:
+        # Bad input parameters make the seeding algorithm break
+        # kind of a bad solution but not sure what else to do here
+        ret['eff'] = 0
+        ret['dup'] = 1
+        ret['fake'] = 1
+        return ret
 
 
 creator.create("Fitness", base.Fitness, weights=(1.0, 1.0, -1.0, -1.0))
@@ -287,8 +217,10 @@ def evaluate(individual):
     #effScore = (1 / (1 - (eff / 100)))
     #penalty = fake * dup / (BIGK) # min(effScore, 200) - penalty
     # whoops, need to change this back to fake * dup
-    penalty = dup / (BIGK) # - fake
+    penalty = dup / (BIGK) - fake
     #effWeighted = eff
+    if eff == 0:
+        penalty = 0
     effWeighted = eff - penalty
     return effWeighted, eff, fake, dup
 
@@ -505,11 +437,7 @@ def main():
     stats_deltaRMin = tools.Statistics(key=lambda ind: ind[NAME_TO_INDEX["deltaRMin"]])
     stats_deltaRMax = tools.Statistics(key=lambda ind: ind[NAME_TO_INDEX["deltaRMax"]])
     stats_radLengthPerSeed = tools.Statistics(key=lambda ind: ind[NAME_TO_INDEX["radLengthPerSeed"]])
-    stats_minPt = tools.Statistics(key=lambda ind: ind[NAME_TO_INDEX["minPt"]])
     stats_cotThetaMax = tools.Statistics(key=lambda ind: ind[NAME_TO_INDEX["cotThetaMax"]])
-    stats_rMax = tools.Statistics(key=lambda ind: ind[NAME_TO_INDEX["rMax"]])
-    stats_collisionRegion = tools.Statistics(key = lambda ind: ind[NAME_TO_INDEX["collisionReg"]])
-    stats_z = tools.Statistics(key = lambda ind: ind[NAME_TO_INDEX["z"]])
     '''
     stats_collisionRegionMin = tools.Statistics(key = lambda ind: ind[NAME_TO_INDEX["collisionRegionMin"]])
     stats_collisionRegionMax = tools.Statistics(key = lambda ind: ind[NAME_TO_INDEX["collisionRegionMax"]])
@@ -519,8 +447,7 @@ def main():
 
     mstats = tools.MultiStatistics(Score=stats_score, Efficiency=stats_eff, FakeRate=stats_fake, DuplicateRate=stats_dup, sigmaScattering=stats_sigmaScattering,
                                 maxSeedsPerSpM=stats_maxSeedsPerSPM, maxPtScattering=stats_maxPtScattering, impactMax=stats_impactMax, deltaRMax=stats_deltaRMax, deltaRMin=stats_deltaRMin, radLengthPerSeed=stats_radLengthPerSeed,
-                                minPt = stats_minPt, cotThetaMax = stats_cotThetaMax,rMax = stats_rMax,collisionReg = stats_collisionRegion,
-                                z = stats_z)
+                                cotThetaMax = stats_cotThetaMax)
                                 #,collisionRegionMin = stats_collisionRegionMin,
                                 #collisionRegionMax = stats_collisionRegionMax, zMin = stats_zMin, zMax = stats_zMax)
     mstats.register("avg", np.mean)
@@ -671,4 +598,3 @@ for i, oneName in enumerate(NAME_TO_FACTOR):
 print(f"My guess was {oldGuess}")
 if (len(MINS) != len(MAXS)) or len(NAME_TO_FACTOR) != len(MINS):
     print("Mismatched definition of names_to_factor and/or mins maxs")
-

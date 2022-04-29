@@ -23,7 +23,7 @@ import sys
 BIGK = 3
 #print(console.log(Object.keys(GlobalOptimizer)))
 alg_stats = {"eff":[],"dup":[],"fake": [],"score": [], "maxPtScattering":[],"impactMax": [], "deltaRMin": [], "sigmaScattering": [], "deltaRMax": [], "maxSeedsPerSpM": [],
-"radLengthPerSeed": []}
+"radLengthPerSeed": [], "cotThetaMax": []}
 effs = []
 dups = []
 fakes = []
@@ -42,7 +42,7 @@ def paramsToInput(saved_args):
     # just adding bFieldInZ as parameter here, doesn't really make sense to adjust
     params = list(saved_args.values())
     names = list(saved_args.keys())
-    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks.py','--input_dir', '/afs/cern.ch/work/e/ehofgard/acts/data/sim_generic/ttbar_mu200_1event/']
+    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/Examples/Scripts/Python/ckf_tracks_opt.py','--input_dir', '/afs/cern.ch/work/e/ehofgard/acts/data/gen/ttbar_mu200_1event_test/particles.root','--outputIsML']
     '''
     ret = ['/afs/cern.ch/work/e/ehofgard/acts/build/bin/ActsExampleCKFTracksGeneric',
            '--ckf-selection-chi2max', '15', '--bf-constant-tesla=0:0:2',
@@ -80,20 +80,17 @@ def executeAlg(arg):
         ret['eff'] = float(tokenizedOutput[2])
         ret['fake'] = float(tokenizedOutput[4])
         ret['dup'] = float(tokenizedOutput[6])
-    if len(tokenizedOutput) == 1:
-        print("Timeout error ")
-        print(arg)
-        print(p1_out)
-        print(p1_err)
-    if ret['eff'] == 0:
-        print("0 efficiency error: ")
-        print(arg)
-        print(p1_out)
-        print(p1_err)
-    return ret
+        return ret
+    else:
+        # Bad input parameters make the seeding algorithm break
+        # kind of a bad solution but not sure what else to do here
+        ret['eff'] = 0
+        ret['dup'] = 1
+        ret['fake'] = 1
+        return ret
     
 
-def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, maxSeedsPerSpM, radLengthPerSeed):
+def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, maxSeedsPerSpM, radLengthPerSeed, cotThetaMax):
     saved_args = locals()
     #params = ["impactMax"]
     for key in saved_args:
@@ -110,7 +107,7 @@ def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, 
     else:
         dup, eff, fake = np.nan, np.nan, np.nan
     # fake * dup / (BIGK)
-    penalty = dup/(BIGK)
+    penalty = dup/(BIGK) - fake
     #param_dist = dict(zip(params,saved_args))
     # zdict = {"a": 1, "b": 2}A
     # would call the function here/open a subprocess
@@ -123,25 +120,26 @@ def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, 
 # Initial guess here
 # Trying initial guess as original CKF parameters
 #pre_eval_x = dict(maxPtScattering = 30000, impactMax = 1.1, deltaRMin = 0.25, sigmaScattering = 4.0, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.0023)
-pre_eval_x = dict(maxPtScattering = 10000, impactMax = 3, deltaRMin = 1, sigmaScattering = 50, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.1)
-evaluations = [(pre_eval_x, function(**pre_eval_x))]
+
+#pre_eval_x = dict(maxPtScattering = 10000, impactMax = 3, deltaRMin = 1, sigmaScattering = 50, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.1)
+#evaluations = [(pre_eval_x, function(**pre_eval_x))]
 
 search = GlobalOptimizer(
     function,
-    lower_bounds = {"maxPtScattering": 1200, "impactMax": 0.1, "deltaRMin": 0.25, "sigmaScattering": 0.2, "deltaRMax": 50.0, "maxSeedsPerSpM": 0, "radLengthPerSeed": 0.001},
-    upper_bounds = {"maxPtScattering": 1234567, "impactMax": 20.0, "deltaRMin": 30.0, "sigmaScattering": 50.0, "deltaRMax": 300.0, "maxSeedsPerSpM": 10, "radLengthPerSeed": 0.1},
-    evaluations=evaluations,
+    lower_bounds = {"maxPtScattering": 1200, "impactMax": 0.1, "deltaRMin": 0.25, "sigmaScattering": 0.2, "deltaRMax": 50.0, "maxSeedsPerSpM": 0, "radLengthPerSeed": 0.001,"cotThetaMax": 5.0},
+    upper_bounds = {"maxPtScattering": 1234567, "impactMax": 20.0, "deltaRMin": 30.0, "sigmaScattering": 50.0, "deltaRMax": 300.0, "maxSeedsPerSpM": 10, "radLengthPerSeed": 0.1, "cotThetaMax": 12.0},
+    #evaluations=evaluations,
     maximize=True,
 )
 
 # This may pose an issue w/ evaluating so many times
-num_function_calls = 100
+num_function_calls = 150
 search.run(num_function_calls)
 #print(search.evaluations)
 optimal_val = search.optimum
 print(optimal_val)
 #print(alg_stats)
-with open('all_results_lipo_300.json', 'w') as fp:
+with open('all_results_lipo_itk_100.json', 'w') as fp:
     json.dump(alg_stats,fp)
-with open('best_result_300.json', 'w') as fp:
+with open('best_result_100.itk_json', 'w') as fp:
     json.dump(optimal_val,fp)
