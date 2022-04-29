@@ -7,7 +7,7 @@ sys.path.insert(0,'/afs/cern.ch/work/e/ehofgard/miniconda3/lib/python3.7/site-pa
 #from collections import OrderedDict
 
 import logging
-from orion.client import build_experiment
+import skopt
 
 import pathlib
 import random
@@ -17,6 +17,7 @@ import numpy as np
 import json
 import array
 import sys
+import pandas as pd
 count = 0
 
 # Put parameters as arguments here
@@ -122,9 +123,21 @@ def executeAlg(arg):
         print(p1_err)
     return ret
     '''
-    
-def score_func(maxPtScattering,impactMax,deltaRMin,sigmaScattering,deltaRMax,maxSeedsPerSpM,radLengthPerSeed,cotThetaMax):
-    params = [maxPtScattering,impactMax,deltaRMin,sigmaScattering,deltaRMax,maxSeedsPerSpM,radLengthPerSeed,cotThetaMax]
+
+space = [
+    skopt.space.Real(1200,1234567,name="maxPtScattering",prior="uniform"),
+    skopt.space.Real(0.1,20,name="impactMax",prior="uniform"),
+    skopt.space.Real(0.25,30,name="deltaRMin",prior="uniform"),
+    skopt.space.Real(0.2,50,name="sigmaScattering",prior='uniform'),
+    skopt.space.Real(50,300,name="deltaRMax",prior="uniform"),
+    skopt.space.Integer(0,10,name="maxSeedsPerSpM"),
+    skopt.space.Real(.001,.1,name="radLengthPerSeed",prior="uniform"),
+    skopt.space.Real(5,12,name="cotThetaMax",prior="uniform")
+]
+
+@skopt.utils.use_named_args(space)
+def objective(**params):
+    params = locals()['params'].values()
     keys = ["maxPtScattering","impactMax","deltaRMin", "sigmaScattering", "deltaRMax", "maxSeedsPerSpM", "radLengthPerSeed","cotThetaMax"]
     #,"collisionRegionMin",
     #"collisionRegionMax","zMin","zMax","rMin","rMax"]
@@ -147,85 +160,10 @@ def score_func(maxPtScattering,impactMax,deltaRMin,sigmaScattering,deltaRMax,max
     global count
     count += 1
     print(count)
-    return [{"name": "objective", "type": "objective", "value": -(eff-penalty)}]
+    return -(eff-penalty)
 
-
-# Try visualization for parameter space
-storage = {
-    "type": "legacy",
-    "database": {
-        "type": "pickleddb",
-        "host": "./db.pkl",
-    },
-}
-
-space = {"maxPtScattering": "uniform(1200,1234567)",
-"impactMax": "uniform(0.1,20)",
-"deltaRMin": "uniform(0.25, 30)",
-"sigmaScattering": "uniform(0.2,50)",
-"deltaRMax": "uniform(50,300)",
-"maxSeedsPerSpM":"uniform(0,10,discrete=True)",
-"radLengthPerSeed":"uniform(.001,0.1)",
-"cotThetaMax": "uniform(5.0,12.0)"}
-
-experiment = build_experiment(
-    "orion_150_true",
-    space=space,
-    storage=storage,
-)
-
-
-experiment.workon(score_func, max_trials=150)
-fig = experiment.plot.regret()
-fig.write_image('test_regret.png')
-fig = experiment.plot.parallel_coordinates()
-fig.write_image('test_parallel_coord.png')
-fig = experiment.plot.lpi()
-fig.write_image('test_lpi.png')
-fig = experiment.plot.partial_dependencies()
-fig.write_image('test_dependency.png')
-
-# To fetch trials in a form on panda dataframe
-df = experiment.to_pandas()
-df.to_csv("orion_150")
-
-#with open('orion_testplots.json', 'w') as fp:
-#    json.dump(alg_stats,fp)
-'''
-study.optimize(objective, n_trials=100)
-#,n_jobs=-1)
-print("Best trial until now:",flush=True)
-print(" Value: ", study.best_trial.value,flush=True)
-print(" Params: ",flush=True)
-for key, value in study.best_trial.params.items():
-    print(f"    {key}: {value}",flush=True)
-
-with open('optuna_itk_test/all_results_itk_test.json', 'w') as fp:
-    json.dump(alg_stats,fp)
-
-fig_hist = plot_optimization_history(study)
-fig_hist.write_image("optuna_itk_test/opt_history.jpeg")
-#fig_contour = plot_contour(study, params=["maxPtScattering","impactMax",
-#"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed"])
-#fig_contour.write_image("optuna_plots_nostart_defaultconfig_K3_fake_moreparams/opt_contour.jpeg")
-fig_parallel = plot_parallel_coordinate(study,params=["maxPtScattering","impactMax",
-    "deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM","radLengthPerSeed","cotThetaMax"])
-#"collisionReg","z","rMin","rMax"])
-fig_parallel.write_image("optuna_itk_test/opt_parallel.jpeg")
-fig_slice1 = plot_slice(study,params=["maxPtScattering","impactMax",
-"deltaRMin","sigmaScattering","deltaRMax","maxSeedsPerSpM"])
-fig_slice1.write_image("optuna_itk_test/opt_slice1.jpeg")
-fig_slice2 = plot_slice(study, params = ["radLengthPerSeed","cotThetaMax"])
-#"collisionReg","z","rMin","rMax"])
-fig_slice2.write_image("optuna_itk_test/opt_slice2.jpeg")
-fig_importance = plot_param_importances(study)
-fig_importance.write_image("optuna_itk_test/opt_import.jpeg")
-## Parameters that impact the trial duration
-fig_importance_duration = plot_param_importances(
-    study, target=lambda t: t.duration.total_seconds(), target_name="duration"
-)
-fig_importance_duration.write_image("optuna_itk_test/opt_import_duration.jpeg")
-'''
-
-
-
+# there are also different algorithms
+results = skopt.forest_minimize(objective,space,n_calls=100)
+skopt.dump(results, 'scikit_results.pkl')
+# for now just save the results object to analyze later
+# can look at visualizations https://neptune.ai/blog/scikit-optimize
