@@ -26,7 +26,7 @@ assert len(PT_CUTS) > 0
 assert len(PT_CUTS) <= len(PT_CUT_COLORS)
 # Define bounds on parameters during training
 MINS = [1200, 0.1, 0.25, 0.2, 50, 0, 0.001,5]#,-300,50,-3000,1000] #, 0.001, 400, 5]
-MAXS = [1234567, 20, 30, 50, 300, 10, 0.1,12]#,-50,300,-1000,3000]
+MAXS = [1234567, 20, 30, 50, 300, 10, 0.1,10]#,-50,300,-1000,3000]
 #MAXS = [1234567, 50, 100, 100, 200, 10, 10]
 #MAXS = [1234567, 20, 30, 10, 200, 4, 0.02] #, 0.003, 600, 10]
 # Dictionary of normalization coefficients

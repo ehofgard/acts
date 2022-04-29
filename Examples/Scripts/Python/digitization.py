@@ -58,7 +58,7 @@ def addDigitization(
     digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, s.config.logLevel)
 
     s.addAlgorithm(digiAlg)
-
+    '''
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
@@ -73,7 +73,7 @@ def addDigitization(
         )
         rmwConfig.addBoundIndicesFromDigiConfig(digiAlg.config)
         s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, s.config.logLevel))
-
+    '''
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
         if not outputDirCsv.exists():

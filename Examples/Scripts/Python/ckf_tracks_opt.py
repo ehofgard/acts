@@ -43,7 +43,7 @@ if "__main__" == __name__:
     # need to rerun optuna with higher cotThetaMax
     p.add_argument(
         "--sf_cotThetaMax",
-        default = 27.2899,
+        default = 7.40627,
         type = float,
         help = "cot of maximum theta angle"
     )
@@ -57,7 +57,7 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--sf_deltaRMax",
-        default = 280,
+        default = 280.0,
         type = float,
         help = "Maximum distance in mm between two SPs in a seed"
     )
@@ -78,7 +78,7 @@ if "__main__" == __name__:
 
     p.add_argument(
         "--sf_maxSeedsPerSpM",
-        default = 4,
+        default = 1,
         type = int,
         help = "How many seeds can share one middle SpacePoint"
     )
@@ -127,7 +127,7 @@ if "__main__" == __name__:
     # Not adding bFieldInZ or beamPos
     p.add_argument(
         "--sf_maxPtScattering",
-        default = float("inf"),
+        default = 10000,
         type = float,
         help = "maximum Pt for scattering cut"
     )
@@ -235,7 +235,7 @@ if "__main__" == __name__:
     if not inputParticlePath.exists():
         inputParticlePath = None
 
-    s = acts.examples.Sequencer(events=100, numThreads=-1)
+    s = acts.examples.Sequencer(events=1, numThreads=-1)
     logger = acts.logging.getLogger("CKFExample")
 
     default_arg = args.default_arg

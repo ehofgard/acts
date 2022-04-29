@@ -127,7 +127,7 @@ def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, 
 search = GlobalOptimizer(
     function,
     lower_bounds = {"maxPtScattering": 1200, "impactMax": 0.1, "deltaRMin": 0.25, "sigmaScattering": 0.2, "deltaRMax": 50.0, "maxSeedsPerSpM": 0, "radLengthPerSeed": 0.001,"cotThetaMax": 5.0},
-    upper_bounds = {"maxPtScattering": 1234567, "impactMax": 20.0, "deltaRMin": 30.0, "sigmaScattering": 50.0, "deltaRMax": 300.0, "maxSeedsPerSpM": 10, "radLengthPerSeed": 0.1, "cotThetaMax": 12.0},
+    upper_bounds = {"maxPtScattering": 1234567, "impactMax": 20.0, "deltaRMin": 30.0, "sigmaScattering": 50.0, "deltaRMax": 300.0, "maxSeedsPerSpM": 10, "radLengthPerSeed": 0.1, "cotThetaMax": 10.0},
     #evaluations=evaluations,
     maximize=True,
 )
@@ -139,7 +139,7 @@ search.run(num_function_calls)
 optimal_val = search.optimum
 print(optimal_val)
 #print(alg_stats)
-with open('all_results_lipo_itk_100.json', 'w') as fp:
+with open('all_results_lipo_itk_150.json', 'w') as fp:
     json.dump(alg_stats,fp)
-with open('best_result_100.itk_json', 'w') as fp:
+with open('best_result_150.itk_json', 'w') as fp:
     json.dump(optimal_val,fp)

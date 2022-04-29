@@ -166,10 +166,10 @@ space = {"maxPtScattering": "uniform(1200,1234567)",
 "deltaRMax": "uniform(50,300)",
 "maxSeedsPerSpM":"uniform(0,10,discrete=True)",
 "radLengthPerSeed":"uniform(.001,0.1)",
-"cotThetaMax": "uniform(5.0,12.0)"}
+"cotThetaMax": "uniform(5.0,10.0)"}
 
 experiment = build_experiment(
-    "orion_150_true",
+    "orion_150_new",
     space=space,
     storage=storage,
 )

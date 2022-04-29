@@ -91,6 +91,8 @@ def addFatras(
             )
         )
 
+    # Don't really need this rn
+    '''
     if outputDirRoot is not None and outputIsML == False:
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
@@ -102,7 +104,7 @@ def addFatras(
                 filePath=str(outputDirRoot / "fatras_particles_final.root"),
             )
         )
-
+    '''
     if outputDirCsv is not None:
         s.addWriter(
             acts.examples.CsvParticleWriter(
@@ -112,7 +114,8 @@ def addFatras(
                 outputStem="particles_initial",
             )
         )
-
+    # Don't need this currently
+    '''
     if outputDirRoot is not None and outputIsML == False:
         s.addWriter(
             acts.examples.RootParticleWriter(
@@ -131,7 +134,6 @@ def addFatras(
                 outputStem="hits",
             )
         )
-
     if outputDirRoot is not None:
         s.addWriter(
             acts.examples.RootSimHitWriter(
@@ -140,6 +142,7 @@ def addFatras(
                 filePath=str(outputDirRoot / "hits.root"),
             )
         )
+    '''
 
     return s
 

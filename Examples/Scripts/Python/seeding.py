@@ -295,6 +295,8 @@ def addSeeding(
             outputDirRoot = Path(outputDirRoot)
             if not outputDirRoot.exists():
                 outputDirRoot.mkdir()
+            # also don't really need this lol
+            '''
             if outputIsML == False:
                 s.addWriter(
                     acts.examples.TrackFinderPerformanceWriter(
@@ -329,6 +331,7 @@ def addSeeding(
                         treeName="estimatedparams",
                     )
                 )
+                '''
 
     return s
 

@@ -132,7 +132,7 @@ space = [
     skopt.space.Real(50,300,name="deltaRMax",prior="uniform"),
     skopt.space.Integer(0,10,name="maxSeedsPerSpM"),
     skopt.space.Real(.001,.1,name="radLengthPerSeed",prior="uniform"),
-    skopt.space.Real(5,12,name="cotThetaMax",prior="uniform")
+    skopt.space.Real(5,10,name="cotThetaMax",prior="uniform")
 ]
 
 @skopt.utils.use_named_args(space)
@@ -164,6 +164,18 @@ def objective(**params):
 
 # there are also different algorithms
 results = skopt.forest_minimize(objective,space,n_calls=100)
-skopt.dump(results, 'scikit_results.pkl')
+print(results)
+skopt.dump(results, 'scikit_results.pkl',store_objective=False)
+
+plot_dir = "skopt_plots/"
+skopt.plots.plot_convergence(results)
+plt.savefig(plot_dir+"convergence.png")
+
+skopt.plots.plot_objective(results)
+plt.savefig(plot_dir+"objective.png")
+
+skopt.plots.plot_regret(results)
+plt.savefig(plot_dir+"regret.png")
+
 # for now just save the results object to analyze later
 # can look at visualizations https://neptune.ai/blog/scikit-optimize
