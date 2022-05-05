@@ -22,7 +22,7 @@ fi
 
 echo "InTrack Dir: ${InTrackDir}"
 echo "Output Dir: ${outputDir}"
-
+'''
 if [ -d ${outputDir} ]
 then
     echo "Output Directory already exists"
@@ -31,6 +31,7 @@ else
     
     mkdir -p ${outputDir}
 fi
+'''
 
 #python vertex_fitting.py --indir=${InputDir} --intracksdir=${InTrackDir} --output=${outputDir} --nEvents=${nEvt} --tracksMaxZinterval=${TracksMaxZint} --tracksMaxSignificance=${TracksMaxSig} --maxVertexChi2=${MaxVtxChi2} --maxMergeVertexSignificance=${MaxMergeVtxSig} --minWeight=${MinWt} --maxIterations=${MaxItr} --maximumVertexContamination=${MaxVtxCont}
 if ${isITk}

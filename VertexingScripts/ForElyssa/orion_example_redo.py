@@ -1,7 +1,10 @@
-#!/usr/bin/env python3
+# Need to change python path before importing LIPO
 import sys
-#importing packages directly from conda environment (acts environment conflicts with conda upon activating)
-sys.path.insert(0,'/afs/cern.ch/work/r/rgarg/public/miniconda3/envs/myEnv_ParOpti/lib/python3.7/site-packages')
+# This is a strange way to fix it, but not sure how else to with weird CFG stuff
+sys.path.insert(0,'/afs/cern.ch/work/e/ehofgard/miniconda3/lib/python3.7/site-packages')
+
+#from lipo import GlobalOptimizer
+#from collections import OrderedDic
 
 import logging
 from orion.client import build_experiment
@@ -29,16 +32,22 @@ def paramsToInput(params,names):
     
     if len(params) != len(names):
         raise Exception("Length of Params must equal names in paramsToInput")
+    
 
-    ret = ['./runVertexing.sh']
+    #ret = ['./runVertexing.sh']
+    ret = ['python3', '/afs/cern.ch/work/e/ehofgard/acts/VertexingScripts/ForElyssa/vertex_fitting_itk.py',\
+    '--indir', '/afs/cern.ch/work/r/rgarg/public/ACTS-Project/ParameterOptimization/TrainData/gen/ttbarPythia_mu140_n1/',\
+    '--intracksdir', '/afs/cern.ch/work/r/rgarg/public/ACTS-Project/ParameterOptimization/TrainData/tracks_itk/CKF_mu140_n1/',\
+    '--nEvents', '1']
+    
+
+    # how are the parameters getting passed in??
 
     i = 0
     for param in params:
-        arg = '--' + names[i]
+        arg = "--" + names[i]
         ret.append(arg)
         ret.append(str(param))
-        #arg = "--" + names[i] + "=" + str(param)
-        #ret.append(arg)
         i+=1
 
     return ret
@@ -54,7 +63,6 @@ def executeAlg(arg):
     p1_out = p1_out.strip().encode()
 
     print(p1_out)
-
     ret = {}
 
     p2 = subprocess.Popen(
@@ -132,8 +140,7 @@ def executeAlg(arg):
         ret['res'] = 1
 
     return ret
-
-
+    
 def score_func(tracksMaxZinterval, tracksMaxSignificance, maxVertexChi2, maxMergeVertexSignificance, minWeight, maxIterations, maximumVertexContamination):
     
     params = [tracksMaxZinterval, tracksMaxSignificance, maxVertexChi2, maxMergeVertexSignificance, minWeight, maxIterations, maximumVertexContamination]
@@ -172,77 +179,22 @@ def score_func(tracksMaxZinterval, tracksMaxSignificance, maxVertexChi2, maxMerg
     return [{"name": "objective", "type": "objective", "value": -(eff-penalty)}]
     #return -(eff - penalty)
 
-def main():
+storage = {
+    "type": "legacy",
+    "database": {
+        "type": "pickleddb",
+        "host": "./db.pkl",
+    },
+}
 
-    space = {"tracksMaxZinterval": "uniform(0.1, 6.0)", "tracksMaxSignificance": "uniform(1.0, 6.0)", "maxVertexChi2": "uniform(1.0, 30.0)", "maxMergeVertexSignificance": "uniform(0.1, 6.0)", "minWeight": "uniform(0.00001, 0.1)", "maxIterations": "uniform(10, 300)", "maximumVertexContamination": "uniform(0.1, 1.0)"}
-    #space = dict(tracksMaxZinterval= "uniform(0.1, 6.0)", tracksMaxSignificance= "uniform(1.0, 6.0)", maxVertexChi2= "uniform(1.0, 30.0)", maxMergeVertexSignificance= "uniform(0.1, 6.0)", minWeight= "uniform(0.00001, 0.1)", maxIterations= "uniform(10, 300)", maximumVertexContamination= "uniform(0.1, 1.0)")
-
-    
-    # Try visualization for parameter space
-    storage = {
-        "type": "legacy",
-        "database": {
-            "type": "ephemeraldb"
-            #"host": "./db.pkl",
-        },
-    }
-    
-    '''
-    experiment = create_experiment(
-        name = "orion_test",
-        space=space
-        )
-    '''
-    experiment = build_experiment(
-        "orion_test",
-        space=space,
-        storage=storage
-        #max_trials=10
-    )
-
-    '''
-    while not experiment.is_done:
-        trial = experiment.suggest()
-        print("trial")
-        print(trial)
-        y = score_func(trial.params["tracksMaxZinterval", "tracksMaxSignificance", "maxVertexChi2", "maxMergeVertexSignificance", "minWeight", "maxIterations", "maximumVertexContamination"])
-        print("y")
-        print(y)
-        
-        experiment.observe(
-            trial,
-            [dict(
-                name = "objective",
-                type = 'objective',
-                value = y)])
-    '''
+space = {"tracksMaxZinterval": "uniform(0.1, 6.0)", "tracksMaxSignificance": "uniform(1.0, 6.0)", "maxVertexChi2": "uniform(1.0, 30.0)","maxMergeVertexSignificance": "uniform(0.1, 6.0)", "minWeight": "uniform(0.00001, 0.1)", "maxIterations": "uniform(10, 300)","maximumVertexContamination": "uniform(0.1, 1.0)"}
 
 
-
-    experiment.workon(score_func, max_trials=10, n_workers=1)
-
-    fig = experiment.plot.regret()
-    fig.write_image('OptResults/Orion/test_regret.png')
-    fig = experiment.plot.parallel_coordinates()
-    fig.write_image('OptResults/Orion/test_parallel_coord.png')
-    fig = experiment.plot.lpi()
-    fig.write_image('OptResults/Orion/test_lpi.png')
-    fig = experiment.plot.partial_dependencies()
-    fig.write_image('OptResults/Orion/test_dependency.png')
-    
-    # To fetch trials in a form on panda dataframe
-    df = experiment.to_pandas()
-    df.to_csv("OptResults/Orion/orion_test")
-
-    '''
-    report_results([dict(
-        name = 'Score',
-        type = 'objective',
-        value = score_func
-    )])
-    '''
+experiment = build_experiment(
+    "orion_test",
+    space=space,
+    storage=storage,
+)
 
 
-
-if __name__ == "__main__":
-    main()
+experiment.workon(score_func, max_trials=10)

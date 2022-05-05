@@ -186,7 +186,7 @@ def addVertexFitting(
             amvf_maxVertexChi2=float(v_MaxVertexChi2),
             amvf_maxMergeVertexSignificance=float(v_MaxMergeVertexSignificance),
             amvf_minWeight=float(v_MinWeight),
-            amvf_maxIterations=int(v_MaxIterations),
+            amvf_maxIterations=int(float(v_MaxIterations)),
             amvf_maximumVertexContamination=float(v_MaximumVertexContamination),
             amvf_useVertexCovForIPEstimation=False,
         )
