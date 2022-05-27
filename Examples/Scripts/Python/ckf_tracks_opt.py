@@ -26,6 +26,7 @@ from acts import UnitConstants as u
 from acts.examples import Sequencer, GenericDetector, RootParticleReader
 
 
+
 if "__main__" == __name__:
     # Insert argument parser dudes
     # defaults are in ckf_tracks.py
@@ -223,10 +224,10 @@ if "__main__" == __name__:
     
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    geo_dir = Path("/afs/cern.ch/work/e/ehofgard/acts-detector-examples/acts-detector-examples")
-    detector, trackingGeometry, decorators = itk.buildITkGeometry(geo_dir)
+    #geo_dir = Path("/afs/cern.ch/work/e/ehofgard/acts-detector-examples/acts-detector-examples")
+    #detector, trackingGeometry, decorators = itk.buildITkGeometry(geo_dir)
 
-    #detector, trackingGeometry, decorators = GenericDetector.create()
+    detector, trackingGeometry, decorators = GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     rnd = acts.examples.RandomNumbers(seed=42)
@@ -235,7 +236,7 @@ if "__main__" == __name__:
     if not inputParticlePath.exists():
         inputParticlePath = None
 
-    s = acts.examples.Sequencer(events=1, numThreads=-1)
+    s = acts.examples.Sequencer(events=100, numThreads=-1)
     logger = acts.logging.getLogger("CKFExample")
 
     default_arg = args.default_arg
@@ -276,7 +277,8 @@ if "__main__" == __name__:
         s,
         trackingGeometry,
         field,
-        digiConfigFile=geo_dir / "atlas/itk-hgtd/itk-smearing-config.json",
+        #digiConfigFile=geo_dir / "atlas/itk-hgtd/itk-smearing-config.json",
+        digiConfigFile = Path("/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"),
         outputDirRoot=outdir,
         rnd=rnd,
     )
@@ -289,7 +291,8 @@ if "__main__" == __name__:
         s,
         trackingGeometry,
         field,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
+        #TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
+        TruthSeedRanges(pt=(500 * u.MeV, None), eta=(-4.0, 4.0), nHits=(6, None)),
         SeedfinderConfigArg(
             r = (args.sf_rMin*u.mm,args.sf_rMax*u.mm),
             deltaR = (args.sf_deltaRMin*u.mm,args.sf_deltaRMax*u.mm),
@@ -305,7 +308,8 @@ if "__main__" == __name__:
             maxPtScattering = args.sf_maxPtScattering,
             #outputIsML = args.outputIsML,
         ),
-        geoSelectionConfigFile=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
+        geoSelectionConfigFile="/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        #geoSelectionConfigFile=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
         outputDirRoot=outdir,
     )
     '''

@@ -51,11 +51,11 @@ def addFatras(
                 outputParticles=particles_selected,
                 removeNeutral=True,
                 # generic detector
-                #absEtaMax=2.5
-                #ptMin = 500*u.MeV,
+                absEtaMax=2.5,
+                ptMin = 500*u.MeV,
                 #ItK detector
-                absEtaMax = 4.0,
-                ptMin = 1*u.GeV,
+                #absEtaMax = 4.0,
+                #ptMin = 1*u.GeV,
             )
         )
     else:

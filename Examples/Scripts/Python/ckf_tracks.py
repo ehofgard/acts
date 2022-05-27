@@ -109,6 +109,8 @@ def addCKFTracks(
         # The bottom seed could be the first, second or third hits on the truth track
         nMeasurementsMin=truthSeedRanges.nHits[0],
         ptMin=truthSeedRanges.pt[0],
+        etaMin = -3.0,
+        etaMax = 3.0,
         filePath=str(outputDirRoot / "performance_ckf.root"),
         outputIsML = outputIsML,
     )
