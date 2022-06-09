@@ -1,6 +1,5 @@
 # Need to change python path before importing LIPO
 import sys
-# This is a strange way to fix it, but not sure how else to with weird CFG stuff
 sys.path.insert(0,'/afs/cern.ch/user/e/ehofgard/.local/lib/python3.7/site-packages')
 
 from lipo import GlobalOptimizer
@@ -18,10 +17,7 @@ import json
 import array
 import sys
 
-# Put parameters as arguments here
-# Need to keep the names of the arguments straight
-BIGK = 3
-#print(console.log(Object.keys(GlobalOptimizer)))
+BIGK = 7
 alg_stats = {"eff":[],"dup":[],"fake": [],"score": [], "maxPtScattering":[],"impactMax": [], "deltaRMin": [], "sigmaScattering": [], "deltaRMax": [], "maxSeedsPerSpM": [],
 "radLengthPerSeed": [], "cotThetaMax": []}
 effs = []
@@ -75,11 +71,19 @@ def executeAlg(arg):
         ['grep', 'mlTag'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     output = p2.communicate(input=p1_out)[0].decode().strip()
     tokenizedOutput = output.split(',')
+    p3 = subprocess.Popen(
+        ['grep', 'Average time per event'], stdin = subprocess.PIPE, stdout=subprocess.PIPE)
+    output = p3.communicate(input = p1_out)[0].decode().strip()
+    print(output)
+    time = output.split(':')[-1]
+    time = float(time.split(' ')[1])
     ret = {}
+
     if len(tokenizedOutput) != 1:
         ret['eff'] = float(tokenizedOutput[2])
         ret['fake'] = float(tokenizedOutput[4])
         ret['dup'] = float(tokenizedOutput[6])
+        ret['time'] = float(time)
         return ret
     else:
         # Bad input parameters make the seeding algorithm break
@@ -87,16 +91,15 @@ def executeAlg(arg):
         ret['eff'] = 0
         ret['dup'] = 1
         ret['fake'] = 1
+        ret['time'] = 1
         return ret
     
 
 def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, maxSeedsPerSpM, radLengthPerSeed, cotThetaMax):
     saved_args = locals()
-    #params = ["impactMax"]
     for key in saved_args:
         alg_stats[key].append(saved_args[key])
     arg = paramsToInput(saved_args)
-    #print(arg)
     r = executeAlg(arg)
     print(r)
     if len(r) != 0:
@@ -106,11 +109,9 @@ def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, 
         alg_stats["fake"].append(fake)
     else:
         dup, eff, fake = np.nan, np.nan, np.nan
-    # fake * dup / (BIGK)
-    penalty = dup/(BIGK) - fake
-    #param_dist = dict(zip(params,saved_args))
-    # zdict = {"a": 1, "b": 2}A
-    # would call the function here/open a subprocess
+    penalty = dup/(BIGK) + fake + r['time']/(BIGK)
+    if eff == 0:
+        penalty = 0
     print(eff-penalty)
     print("Iteration Number: ")
     print(len(alg_stats['eff']))
@@ -121,25 +122,20 @@ def function(maxPtScattering, impactMax, deltaRMin, sigmaScattering, deltaRMax, 
 # Trying initial guess as original CKF parameters
 #pre_eval_x = dict(maxPtScattering = 30000, impactMax = 1.1, deltaRMin = 0.25, sigmaScattering = 4.0, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.0023)
 
-#pre_eval_x = dict(maxPtScattering = 10000, impactMax = 3, deltaRMin = 1, sigmaScattering = 50, deltaRMax = 60.0, maxSeedsPerSpM = 1, radLengthPerSeed=0.1)
-#evaluations = [(pre_eval_x, function(**pre_eval_x))]
 
 search = GlobalOptimizer(
     function,
     lower_bounds = {"maxPtScattering": 1200, "impactMax": 0.1, "deltaRMin": 0.25, "sigmaScattering": 0.2, "deltaRMax": 50.0, "maxSeedsPerSpM": 0, "radLengthPerSeed": 0.001,"cotThetaMax": 5.0},
-    upper_bounds = {"maxPtScattering": 1234567, "impactMax": 20.0, "deltaRMin": 30.0, "sigmaScattering": 50.0, "deltaRMax": 300.0, "maxSeedsPerSpM": 10, "radLengthPerSeed": 0.1, "cotThetaMax": 10.0},
+    upper_bounds = {"maxPtScattering": 500000, "impactMax": 20.0, "deltaRMin": 30.0, "sigmaScattering": 50.0, "deltaRMax": 300.0, "maxSeedsPerSpM": 10, "radLengthPerSeed": 0.1, "cotThetaMax": 10.0},
     #evaluations=evaluations,
     maximize=True,
 )
 
-# This may pose an issue w/ evaluating so many times
 num_function_calls = 150
 search.run(num_function_calls)
-#print(search.evaluations)
 optimal_val = search.optimum
 print(optimal_val)
-#print(alg_stats)
-with open('all_results_lipo_itk_150.json', 'w') as fp:
+with open('all_results_lipo_time_150_generic_K7_barrel.json', 'w') as fp:
     json.dump(alg_stats,fp)
-with open('best_result_150.itk_json', 'w') as fp:
+with open('best_result_time_150_generic_K7_barrel.json', 'w') as fp:
     json.dump(optimal_val,fp)

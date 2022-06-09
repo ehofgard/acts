@@ -26,30 +26,14 @@ assert len(PT_CUTS) > 0
 assert len(PT_CUTS) <= len(PT_CUT_COLORS)
 # Define bounds on parameters during training
 MINS = [1200, 0.1, 0.25, 0.2, 50, 0, 0.001,5]#,-300,50,-3000,1000] #, 0.001, 400, 5]
-MAXS = [1234567, 20, 30, 50, 300, 10, 0.1,10]#,-50,300,-1000,3000]
+MAXS = [500000, 20, 30, 50, 300, 10, 0.1,10]#,-50,300,-1000,3000]
 #MAXS = [1234567, 50, 100, 100, 200, 10, 10]
 #MAXS = [1234567, 20, 30, 10, 200, 4, 0.02] #, 0.003, 600, 10]
 # Dictionary of normalization coefficients
 # because update for each parameter is drawn from the same normal distribution
-# NAME_TO_FACTOR = {'maxPt': 12000, 'impactMax': 1.0, 'deltaRMin': 5.0, 'sigmaScattering': 2.0, 'deltaRMax': 60.0, 'maxSeedsPerSpM': 1.0, 'radLengthPerSeed': 0.005}
-#NAME_TO_FACTOR = OrderedDict([('maxPt', 12000), ('impactMax', 1.0), ('deltaRMin', 5.0), ('sigmaScattering', 2.0), ('deltaRMax', 60.0), ('maxSeedsPerSpM', 1.0), ('radLengthPerSeed', 0.005)])
-# Changing these to be the old ACTS parameters
-#NAME_TO_FACTOR = OrderedDict([('maxPtScattering', 30000), ('impactMax', 1.1), ('deltaRMin', .25), ('sigmaScattering', 4.0), ('deltaRMax', 60.0), ('maxSeedsPerSpM', 1.0), ('radLengthPerSeed', 0.0023)])
-# NAME_TO_FACTOR = {'maxPt': 12000, 'impactMax': 1,
-#                   'deltaRMin': 5, 'sigmaScattering': 2, 'deltaRMax': 60.0, 'collisionRegionMin': -3, 'collisionRegionMax': 3, 'maxSeedsPerSpM': 1, 'radLengthPerSeed': 0.005, 'bFieldInZ': 0.002, 'minPt': 500, 'cotThetaMax': 7.40627}
-# myGuess = [12000, 1, 1, 2.25, 60, 0.95, 0.005] # good
-# myGuess = [25000, 5, 5, 0.2, 120, 0.95, 0.005] # bad
-# myGuess = [12000, 10, 1, 2.25, 60, 0.99, 0.005] # ttbar
-# myGuess = [1234, 9, 4.0, 2.0, 80, 0.9, 0.005]
-# original guess
-# myGuess = [10000, 10, 1, 50, 200, 5, 0.005]
-# just trying to scale by 1
-#NAME_TO_FACTOR = OrderedDict([('maxPtScattering', 10000), ('impactMax', 3), ('deltaRMin', 1), ('sigmaScattering', 50), ('deltaRMax', 60.0), ('maxSeedsPerSpM', 1.0), ('radLengthPerSeed', 0.1), ('minPt', 500), ('cotThetaMax', 7.40627),
-#('rMax', 600), ('collisionReg', 150), ('z', 2800)])#,('collisionRegionMin', -250), ('collisionRegionMax', 250),('zMin',-2000),('zMax',2000)])
-# just have one variable for collision region
 NAME_TO_FACTOR = OrderedDict([('maxPtScattering', 10000), ('impactMax', 2.0), ('deltaRMin', 20), ('sigmaScattering', 2), ('deltaRMax', 280), \
 ('maxSeedsPerSpM', 1.0), ('radLengthPerSeed', 0.1), ('cotThetaMax', 7.40627)])
-myGuess = [10000, 2, 20,2.0, 280, 1, .1, 7.40627]#, -250, 250, -2000, 2000]
+myGuess = [10000, 3, 1,50, 60, 1, .1, 7.40627]#, -250, 250, -2000, 2000]
 NAME_TO_INDEX = {}
 for i, oneName in enumerate(NAME_TO_FACTOR):
     myGuess[i] *= 1.0 / NAME_TO_FACTOR[oneName]
@@ -57,10 +41,10 @@ for i, oneName in enumerate(NAME_TO_FACTOR):
     MAXS[i] *= 1.0 / NAME_TO_FACTOR[oneName]
     NAME_TO_INDEX[oneName] = i
 # used to be 16, seeing if it will time out with 10
-NGEN = 30 # Number of generations
+NGEN = 50 # Number of generations
 # changing to 1
-BIGK = 3
-plotDirectory = "itk_EA_1event_30gen" #"zzTestingITK_k100,000_gen200" #"yES_7params_scored4_muon_gen" + str(NGEN) + "_pop50_srange0.01-0.3_eval1" # "zES_7params_scored1_muon_gen200_pop50_srange0.01-0.3_eval2" # Where to save the plots
+BIGK = 7
+plotDirectory = "itk_EA_time_generic_50gen_K7_barrel" #"zzTestingITK_k100,000_gen200" #"yES_7params_scored4_muon_gen" + str(NGEN) + "_pop50_srange0.01-0.3_eval1" # "zES_7params_scored1_muon_gen200_pop50_srange0.01-0.3_eval2" # Where to save the plots
 plotDirectory += "/"
 ttbarSampleInput = ['--input-dir', 'sim_generic_ATLASB_ttbar_e4_pu200_eta2.5/']
 ttbarSampleBool = False
@@ -162,11 +146,18 @@ def executeAlg(arg):
         ['grep', mlTag], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     output = p2.communicate(input=p1_out)[0].decode().strip()
     tokenizedOutput = output.split(',')
+    p3 = subprocess.Popen(
+        ['grep', 'Average time per event'], stdin = subprocess.PIPE, stdout=subprocess.PIPE)
+    output = p3.communicate(input = p1_out)[0].decode().strip()
+    print(output)
+    time = output.split(':')[-1]
+    time = float(time.split(' ')[1])
     ret = {}
     if len(tokenizedOutput) != 1:
         ret['eff'] = float(tokenizedOutput[2])
         ret['fake'] = float(tokenizedOutput[4])
         ret['dup'] = float(tokenizedOutput[6])
+        ret['time'] = float(time)
         return ret
     else:
         # Bad input parameters make the seeding algorithm break
@@ -174,6 +165,7 @@ def executeAlg(arg):
         ret['eff'] = 0
         ret['dup'] = 1
         ret['fake'] = 1
+        ret['time'] = 1
         return ret
 
 
@@ -217,7 +209,7 @@ def evaluate(individual):
     #effScore = (1 / (1 - (eff / 100)))
     #penalty = fake * dup / (BIGK) # min(effScore, 200) - penalty
     # whoops, need to change this back to fake * dup
-    penalty = dup / (BIGK) - fake
+    penalty = dup / (BIGK) + fake + r['time']/(BIGK)
     #effWeighted = eff
     if eff == 0:
         penalty = 0
