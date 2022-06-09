@@ -1,16 +1,4 @@
 #!/usr/bin/env python3
-#### NEED TO MERGE THIS WITH NEW CHANGES ####
-'''
-from pathlib import Path
-from typing import Optional
-
-from acts.examples import Sequencer, GenericDetector, RootParticleReader
-
-import acts
-import itk
-
-from acts import UnitConstants as u
-'''
 
 import argparse
 from pathlib import Path
@@ -30,7 +18,6 @@ from acts.examples import Sequencer, GenericDetector, RootParticleReader
 if "__main__" == __name__:
     # Insert argument parser dudes
     # defaults are in ckf_tracks.py
-    # change default to ones in itk_seeding.py
     p = argparse.ArgumentParser(
         description = "Example script to run the generic detector with parameter changes",
     )
@@ -189,7 +176,6 @@ if "__main__" == __name__:
         help = "bins in |eta| to specify variable selections"
     )
 
-    # parser.add_argument('-b', action='store_true', default=False)
     p.add_argument(
         "--outputIsML",
         default = False,
@@ -283,16 +269,15 @@ if "__main__" == __name__:
         rnd=rnd,
     )
 
-    # add SeedfinderConfigArg! in seeding.py
-    # add outputML variable here
-    # note in full_chain itk.py default arguments are 
-    # seedfinderConfigArg() None? ask Rocky
     s = addSeeding(
         s,
         trackingGeometry,
         field,
         #TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
-        TruthSeedRanges(pt=(500 * u.MeV, None), eta=(-4.0, 4.0), nHits=(6, None)),
+        # THESE WERE THE PARAMETERS USED FOR GENERIC DETECTOR
+        # TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(6, None)),
+        # eta 1.5 for barrel
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(6, None)), 
         SeedfinderConfigArg(
             r = (args.sf_rMin*u.mm,args.sf_rMax*u.mm),
             deltaR = (args.sf_deltaRMin*u.mm,args.sf_deltaRMax*u.mm),
@@ -306,7 +291,6 @@ if "__main__" == __name__:
             impactMax = args.sf_impactMax*u.mm,
             cotThetaMax = args.sf_cotThetaMax,
             maxPtScattering = args.sf_maxPtScattering,
-            #outputIsML = args.outputIsML,
         ),
         geoSelectionConfigFile="/afs/cern.ch/work/e/ehofgard/acts/Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         #geoSelectionConfigFile=geo_dir / "atlas/itk-hgtd/geoSelection-ITk.json",
@@ -325,11 +309,13 @@ if "__main__" == __name__:
         )
     '''
 
+    # Note this should be changed in future iterations
+    # Should be changed to match truth seed ranges above
     s = addCKFTracks(
         s,
         trackingGeometry,
         field,
-        TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(6, None)),
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), nHits=(6, None)),
         outputDirRoot=outdir,
         outputIsML = args.outputIsML,
     )

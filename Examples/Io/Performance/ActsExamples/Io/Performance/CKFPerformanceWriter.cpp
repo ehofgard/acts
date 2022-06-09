@@ -291,16 +291,16 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   
   for (const auto& particle : particles) {
     const auto eta = Acts::VectorHelpers::eta(particle.unitDirection());
-    /*
     if (particle.transverseMomentum() < m_cfg.ptMin || 
         particle.transverseMomentum() > m_cfg.ptMax || eta < m_cfg.etaMin
         || eta > m_cfg.etaMax) {
       continue;
     }
-    */
+   /*
    if (particle.transverseMomentum() < m_cfg.ptMin) {
      continue;
    }
+   */
     auto particleId = particle.particleId();
     // Investigate the truth-matched tracks
     size_t nMatchedTracks = 0;
